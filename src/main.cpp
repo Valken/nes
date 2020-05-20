@@ -51,13 +51,15 @@ struct Stuff
     int a;
     int b;
     int c;
+
+    void Step();
     
-    void Thing()
+    void Thing(int thing)
     {
         printf("thing\n");
     };
     
-    void OtherThing()
+    void OtherThing(int someThing)
     {
         printf("otherthing\n");
     }
@@ -66,12 +68,17 @@ struct Stuff
 // POC for pointer to member jump table that doesn't go down the lambda or std::bind route
 // Can call std::invoke or have a macro to call function on opcode lookup.
 // Need to investigate std::invoke perf
-typedef void (Stuff::*StuffMember)();
+typedef void (Stuff::*StuffMember)(int);
 StuffMember things[]
 {
     &Stuff::Thing,
     &Stuff::OtherThing
 };
+
+void Stuff::Step()
+{
+    std::invoke(things[0], this, 111);
+}
 
 int main(int argc, char *argv[])
 {
@@ -79,8 +86,10 @@ int main(int argc, char *argv[])
     opcodes[1]();
     
     Stuff s;
-    std::invoke(things[0], s);
-    std::invoke(things[1], s);
+    std::invoke(things[0], s, 222);
+    std::invoke(things[1], s, 333);
+    
+    s.Step();
     
     if (argc < 1)
         return 1;
