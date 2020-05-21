@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
     
     s.Step();
     
-    CPU cpu(nullptr);
+    nes::CPU cpu(nullptr);
     /*auto cycles =*/ cpu.Step();
     
     if (argc < 1)

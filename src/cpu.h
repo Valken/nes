@@ -1,6 +1,9 @@
 #pragma once
 #include <stdint.h>
-#include "Memory.h"
+#include "memory.h"
+
+namespace nes
+{
 
 enum class AddressMode;
 struct Operand;
@@ -12,14 +15,14 @@ struct CPU
     uint8_t X;
     uint8_t Y;
     uint8_t Status;
-    Memory *const MemoryBus;
-    
-    explicit CPU(Memory *const memory);
+    Memory* const MemoryBus;
+
+    explicit CPU(Memory* const memory);
     ~CPU() = default;
     // Rule of 5 here?
-    
+
     void Step();
-    
+
 private:
     uint8_t Fetch(); // Read current opcode from PC, advance PC by instruction size
     // decode
@@ -27,3 +30,4 @@ private:
     // execute
 };
 
+} // nes
