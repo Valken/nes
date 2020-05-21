@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include "Memory.h"
+#include "cpu.h"
 
 struct Header
 {
@@ -24,24 +25,6 @@ constexpr size_t ChrRomBankSize = 8 * 1024;
 // So I'll need to sort a memory map, but also console ram, rom (and as such, the mapper inteface that sits in front of rom)
 // Then I can... what, see if I can decode instructions...
 
-//class CPUMemory : public Memory
-//{
-//public:
-//    virtual ~CPUMemory() {}
-//
-//    uint8_t Read(uint16_t address) override;
-//    void Write(uint16_t address, uint8_t value) override;
-//};
-//
-//uint8_t CPUMemory::Read(uint16_t address)
-//{
-//    return 0;
-//}
-//
-//void CPUMemory::Write(uint16_t address, uint8_t value)
-//{
-//
-//}
 void Thing() { printf("thing\n"); };
 void OtherThing() { printf("otherthing\n"); };
 void (*opcodes[])() { Thing, OtherThing };
@@ -90,6 +73,9 @@ int main(int argc, char *argv[])
     std::invoke(things[1], s, 333);
     
     s.Step();
+    
+    CPU cpu(nullptr);
+    /*auto cycles =*/ cpu.Step();
     
     if (argc < 1)
         return 1;
