@@ -2,26 +2,6 @@
 #include "cpu.h"
 #include "memory.h"
 
-namespace {
-
-typedef void (nes::CPU::*Execute)(nes::Operand const&);
-
-struct InstructionInfo
-{
-    Execute execute;
-    nes::AddressMode addressMode;
-    // Size
-    // Cycles
-};
-
-InstructionInfo InstructionInfo[256] =
-{
-};
-
-// InstructionInfo table here
-
-} // anonymous
-
 namespace nes
 {
 
@@ -32,11 +12,39 @@ enum class AddressMode
     Etc,
 };
 
-struct Operand
+}
+
+namespace {
+
+typedef void (nes::CPU::*Execute)(nes::Operand const&);
+
+struct InstructionInfo
 {
+    Execute execute;
+    nes::AddressMode addressMode;
+    uint8_t instructionSize;
+    // Cycles
 };
 
-CPU::CPU(Memory* const memoryBus) : MemoryBus(memoryBus)
+InstructionInfo InstructionInfo[256] =
+{
+    { &nes::CPU::NOP, nes::AddressMode::Direct, 1, },
+};
+
+// InstructionInfo table here
+
+} // anonymous
+
+namespace nes
+{
+
+struct Operand
+{
+    uint16_t address;
+    AddressMode addressMode;
+};
+
+CPU::CPU(Memory* const memoryBus) : PC(0x0000), A(0), X(0), Y(0), MemoryBus(memoryBus)
 {
 }
 
@@ -47,13 +55,12 @@ void CPU::Step()
     auto programCounter = PC;
     auto instruction = Fetch();
     auto instructionInfo = InstructionInfo[instruction];
-
+    PC += instructionInfo.instructionSize;
+    
     Decode(instructionInfo.addressMode);
+    
     Operand operand;
     std::invoke(instructionInfo.execute, this, operand);
-
-    // Decode
-    // Execute
 
     // Return num cycles
 }
@@ -64,6 +71,10 @@ uint8_t CPU::Fetch()
 }
 
 void CPU::Decode(AddressMode addressMode)
+{
+}
+
+void CPU::NOP(Operand const&)
 {
 }
 

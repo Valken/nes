@@ -2,7 +2,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include "Memory.h"
+#include "cpumemory.h"
 #include "cpu.h"
 
 struct Header
@@ -22,59 +22,13 @@ static_assert(sizeof(Header) == 16, "Header should be 16 bytes!");
 constexpr size_t ProgRomBankSize = 16 * 1024;
 constexpr size_t ChrRomBankSize = 8 * 1024;
 
-// So I'll need to sort a memory map, but also console ram, rom (and as such, the mapper inteface that sits in front of rom)
-// Then I can... what, see if I can decode instructions...
-
-void Thing() { printf("thing\n"); };
-void OtherThing() { printf("otherthing\n"); };
-void (*opcodes[])() { Thing, OtherThing };
-
-struct Stuff
-{
-    int a;
-    int b;
-    int c;
-
-    void Step();
-    
-    void Thing(int thing)
-    {
-        printf("thing\n");
-    };
-    
-    void OtherThing(int someThing)
-    {
-        printf("otherthing\n");
-    }
-};
-
-// POC for pointer to member jump table that doesn't go down the lambda or std::bind route
-// Can call std::invoke or have a macro to call function on opcode lookup.
-// Need to investigate std::invoke perf
-typedef void (Stuff::*StuffMember)(int);
-StuffMember things[]
-{
-    &Stuff::Thing,
-    &Stuff::OtherThing
-};
-
-void Stuff::Step()
-{
-    std::invoke(things[0], this, 111);
-}
-
 int main(int argc, char *argv[])
 {
-    opcodes[0]();
-    opcodes[1]();
+    std::vector<uint8_t> ram;
+    ram.reserve(0x2000);
+    nes::CPUMemory memoryMap(ram);
+    nes::CPU cpu(&memoryMap);
     
-    Stuff s;
-    std::invoke(things[0], s, 222);
-    std::invoke(things[1], s, 333);
-    
-    s.Step();
-    
-    nes::CPU cpu(nullptr);
     /*auto cycles =*/ cpu.Step();
     
     if (argc < 1)
@@ -105,13 +59,11 @@ int main(int argc, char *argv[])
         printf("After reading %ld bytes, eof is now %s", readCount, isEofNow ? "true" : "false");
     }
     
-    if (int a = 0; a == 0)
-    {
-        printf("YES!\n");
-    }
-    
-    Stuff stuff {.a = 1, .b = 2, .c = 3};
-    
-    auto [one, two, three] = std::make_tuple(1, "two", 3.0f);
+//    if (int a = 0; a == 0)
+//    {
+//        printf("YES!\n");
+//    }
+//
+//    auto [one, two, three] = std::make_tuple(1, "two", 3.0f);
     return 0;
 }

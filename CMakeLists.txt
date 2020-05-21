@@ -7,6 +7,9 @@ add_executable(NES
 	src/cpu.h
 	src/cpu.cpp 
 	src/memory.h
+    src/cpumemory.h
 	src/cpumemory.cpp)
+
+#source_group(thing REGULAR_EXPRESSION src/cpu.*)
 
 #target_include_directories(NES PRIVATE include)

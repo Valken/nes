@@ -22,12 +22,13 @@ struct CPU
     // Rule of 5 here?
 
     void Step();
+    
+    void NOP(Operand const& operand); // This shouldn't be public...
 
 private:
     uint8_t Fetch(); // Read current opcode from PC, advance PC by instruction size
     // decode
     void Decode(AddressMode mode);
-    // execute
 };
 
 } // nes
