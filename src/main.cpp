@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include "cpumemory.h"
 #include "cpu.h"
 
@@ -24,8 +25,10 @@ constexpr size_t ChrRomBankSize = 8 * 1024;
 
 int main(int argc, char *argv[])
 {
-    std::vector<uint8_t> ram;
+    std::vector<uint8_t> ram(0x2000);
     ram.reserve(0x2000);
+    std::fill(ram.begin(), ram.end(), 0);
+    
     nes::CPUMemory memoryMap(ram);
     nes::CPU cpu(&memoryMap);
     
@@ -56,7 +59,7 @@ int main(int argc, char *argv[])
         char buff[1024];
         readCount = fileStream.read(buff, 1024).gcount();
         auto isEofNow = fileStream.eof();
-        printf("After reading %ld bytes, eof is now %s", readCount, isEofNow ? "true" : "false");
+        printf("After reading %zd bytes, eof is now %s", readCount, isEofNow ? "true" : "false");
     }
     
 //    if (int a = 0; a == 0)
