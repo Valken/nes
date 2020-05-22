@@ -40,6 +40,7 @@ namespace nes
 
 struct Operand
 {
+    uint16_t value;
     uint16_t address;
     AddressMode addressMode;
 };
@@ -57,9 +58,8 @@ void CPU::Step()
     auto instructionInfo = InstructionInfo[instruction];
     PC += instructionInfo.instructionSize;
     
-    Decode(instructionInfo.addressMode);
+    auto operand = Decode(instructionInfo.addressMode);
     
-    Operand operand;
     std::invoke(instructionInfo.execute, this, operand);
 
     // Return num cycles
@@ -70,8 +70,9 @@ uint8_t CPU::Fetch()
     return MemoryBus->Read(PC);
 }
 
-void CPU::Decode(AddressMode addressMode)
+Operand CPU::Decode(AddressMode addressMode) const
 {
+    return Operand { .value = 0x0, .address = 0x0, .addressMode = AddressMode::Indirect };
 }
 
 void CPU::NOP(Operand const&)

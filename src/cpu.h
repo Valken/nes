@@ -27,8 +27,7 @@ struct CPU
 
 private:
     uint8_t Fetch(); // Read current opcode from PC, advance PC by instruction size
-    // decode
-    void Decode(AddressMode mode);
+    Operand Decode(AddressMode addressMode) const;
 };
 
 } // nes
