@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 {
     std::vector<uint8_t> ram(0x2000);
     ram.reserve(0x2000);
-    std::fill(ram.begin(), ram.end(), 0);
+    std::fill(ram.begin(), ram.end(), 0xEA );
     
     nes::CPUMemory memoryMap(ram);
     nes::CPU cpu(&memoryMap);

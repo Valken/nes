@@ -13,18 +13,39 @@ uint8_t CPUMemory::Read(uint16_t address)
     {
         return ram[address % 0x800];
     }
-    else if (address >= 0x2000 && address < 0x4000)
+    else if (address < 0x4000)
     {
-        // TODO!
+        auto ppuRegister = address % 8;
+        return 0x00;
     }
-    else
+    else if (address < 0x6000)
     {
-        // TODO!
+        // Lots of more memory mapping to do here
+    }
+    else if (address >= 0x6000)
+    {
+        // Mapper
     }
 }
 
 void CPUMemory::Write(uint16_t address, uint8_t value)
 {
+    if (address < 0x2000)
+    {
+        ram[address % 0x800] = value;
+    }
+    else if (address < 0x4000)
+    {
+        // PPU register write
+    }
+    else if (address < 0x6000)
+    {
+        // Lots of more memory mapping to do here
+    }
+    else if (address >= 0x6000)
+    {
+        // Mapper
+    }
 }
 
 } // nes

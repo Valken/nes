@@ -4,17 +4,53 @@
 
 namespace nes
 {
-enum class AddressMode;
-struct Operand;
+
+enum class AddressMode
+{
+    Implicit,
+    Accumulator,
+    Immediate,
+    ZeroPage,
+    ZeroPageX,
+    ZeroPageY,
+    Relative,
+    Absolute,
+    AbsoluteX,
+    AbsoluteY,
+    Indirect,
+    IndexedIndirect,
+    IndirectIndexed,
+};
+
+struct Operand
+{
+    uint16_t value;
+    uint16_t address;
+    AddressMode addressMode;
+};
+
+class CPU;
+
+typedef void (CPU::*Instruction)(Operand const&);
+
+struct InstructionInfo
+{
+    Instruction instruction;
+    nes::AddressMode addressMode;
+    uint8_t instructionSize;
+    uint8_t cycles;
+    uint8_t pageCycles;
+};
 
 struct CPU
 {
-	uint16_t PC;
-	uint8_t A;
-	uint8_t X;
-	uint8_t Y;
-	uint8_t Status;
-	Memory* const MemoryBus;
+	uint16_t pc;
+	uint8_t a;
+	uint8_t x;
+	uint8_t y;
+    uint8_t p;
+    uint8_t s; // Stack pointer
+	Memory* const memoryBus;
 
 	explicit CPU(Memory* const memory);
 	~CPU() = default;
@@ -22,14 +58,13 @@ struct CPU
 
 	void Step();
 
-	void NOP(Operand const& operand); // This shouldn't be public...
-
 private:
 	uint8_t Fetch(); // Read current opcode from PC, advance PC by instruction size
 	Operand Decode(AddressMode addressMode) const;
 
 	// Instructions from http://www.obelisk.me.uk/6502/instructions.html
-
+    static InstructionInfo InstructionInfo[256];
+    
 	// Load/Store Operations
 	void LDA(Operand const&);
 	void LDX(Operand const&);
@@ -75,7 +110,7 @@ private:
 
 	// Shifts
 	void ASL(Operand const&);
-	void LSL(Operand const&);
+	void LSR(Operand const&);
 	void ROL(Operand const&);
 	void ROR(Operand const&);
 
@@ -98,13 +133,14 @@ private:
 	void CLC(Operand const&);
 	void CLD(Operand const&);
 	void CLV(Operand const&);
+    void CLI(Operand const&);
 	void SEC(Operand const&);
 	void SED(Operand const&);
 	void SEI(Operand const&);
 
 	// System Functions
 	void BRK(Operand const&);
-	//void NOP(Operand const&);
+	void NOP(Operand const&);
 	void RTI(Operand const&);
 };
 
