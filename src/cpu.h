@@ -1,6 +1,7 @@
 #pragma once
-#include <stdint.h>
+
 #include "memory.h"
+#include <stdint.h>
 
 namespace nes
 {
@@ -24,13 +25,12 @@ enum class AddressMode
 
 struct Operand
 {
-    uint16_t value;
+    uint16_t value; // Don't need one of these. This should encap the address and address mode and a function will resolve the ACTUAL address
     uint16_t address;
     AddressMode addressMode;
 };
 
 class CPU;
-
 typedef void (CPU::*Instruction)(Operand const&);
 
 struct InstructionInfo
@@ -42,14 +42,26 @@ struct InstructionInfo
     uint8_t pageCycles;
 };
 
+enum CpuFlags
+{
+    C = (1 << 0), // Carry
+    Z = (1 << 1), // Zero
+    I = (1 << 2), // Interrupt
+    D = (1 << 3), // Decimal
+    B = (1 << 4), // Break
+    U = (1 << 5), // Unused
+    V = (1 << 6), // Overflow
+    N = (1 << 7), // Negative
+};
+
 struct CPU
 {
 	uint16_t pc;
 	uint8_t a;
 	uint8_t x;
 	uint8_t y;
-    uint8_t p;
-    uint8_t s; // Stack pointer
+    uint8_t s;
+    uint16_t sp; // Stack pointer
 	Memory* const memoryBus;
 
 	explicit CPU(Memory* const memory);

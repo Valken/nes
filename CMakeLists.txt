@@ -12,8 +12,16 @@ add_executable(NES
     src/cpumemory.h
 	src/cpumemory.cpp)
 
-target_include_directories(NES PRIVATE gtest/googletest/include)
-target_link_libraries(NES gtest gtest_main)
+add_executable(CPU_Test
+		test/cpu_tests.cpp
+		src/cpu.h
+		src/cpu.cpp
+		src/memory.h
+		src/cpumemory.h
+		src/cpumemory.cpp)
+
+target_include_directories(CPU_Test PRIVATE ${gtest_SOURCE_DIR}/include)
+target_link_libraries(CPU_Test gtest gtest_main)
 
 #source_group(thing REGULAR_EXPRESSION src/cpu.*)
 

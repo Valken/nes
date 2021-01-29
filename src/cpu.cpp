@@ -1,11 +1,11 @@
-#include <functional>
 #include "cpu.h"
 #include "memory.h"
+#include <functional>
 
 namespace nes
 {
 
-CPU::CPU(Memory* const memoryBus) : pc(0x0000), a(0), x(0), y(0), p(0), s(0xFD), memoryBus(memoryBus)
+CPU::CPU(Memory* const memoryBus) : pc(0x0000), a(0), x(0), y(0), s(0xFD), memoryBus(memoryBus)
 {
 }
 
@@ -53,11 +53,11 @@ Operand CPU::Decode(AddressMode addressMode) const
             break;
             
         case AddressMode::ZeroPageX:
-            address = memoryBus->Read(pc + 1) + x;
+            address = (memoryBus->Read(pc + 1) + x) & 0xFF;
             break;
             
         case AddressMode::ZeroPageY:
-            address = memoryBus->Read(pc + 1) + y;
+            address = (memoryBus->Read(pc + 1) + y) & 0xFF;
             break;
             
         case AddressMode::Relative:
@@ -73,9 +73,12 @@ Operand CPU::Decode(AddressMode addressMode) const
             
         case AddressMode::AbsoluteX:
         case AddressMode::AbsoluteY:
+            break;
+            
         case AddressMode::Indirect:
         case AddressMode::IndexedIndirect:
         case AddressMode::IndirectIndexed:
+            
             break;
     }
     
@@ -360,8 +363,10 @@ InstructionInfo CPU::InstructionInfo[256] =
 
 // Load/Store Operations
 
-void CPU::LDA(Operand const&)
+void CPU::LDA(Operand const& operand)
 {
+    a = memoryBus->Read(operand.value);
+
 }
 
 void CPU::LDX(Operand const&)
@@ -417,7 +422,7 @@ void CPU::PHA(Operand const&)
 }
 
 void CPU::PHP(Operand const&)
-{
+{ 
 }
 
 void CPU::PLA(Operand const&)
