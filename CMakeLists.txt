@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 project(NES CXX)
 set(CMAKE_CXX_STANDARD 20)
 
+add_subdirectory(external/gtest)
+
 add_executable(NES
 	src/main.cpp 
 	src/cpu.h
@@ -10,6 +12,10 @@ add_executable(NES
     src/cpumemory.h
 	src/cpumemory.cpp)
 
-source_group(thing REGULAR_EXPRESSION src/cpu.*)
+target_include_directories(NES PRIVATE gtest/googletest/include)
+target_link_libraries(NES gtest gtest_main)
 
-#target_include_directories(NES PRIVATE include)
+#source_group(thing REGULAR_EXPRESSION src/cpu.*)
+
+#target_include_#[[]]directories(NES PRIVATE include)
+
