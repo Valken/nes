@@ -136,18 +136,14 @@ uint16_t CPU::Read16(uint16_t address) const
     return (high << 8) | low;
 }
 
-uint16_t CPU::ReadBugged(uint16_t pointer) const
+uint16_t CPU::ReadBugged(uint16_t address) const
 {
-    if ((pointer & 0x00FF) == 0x00FF)
-    {
-        uint8_t low = memoryBus->Read(pointer);
-        uint8_t high = memoryBus->Read((pointer & 0xFF00));
-        return (high << 8) | low;
-    }
-    else
-    {
-        return Read16(pointer);
-    }
+    // Used for indirect addressing. If lsb of value is on page boundary then
+    // the the msb wraps around to the start of the page again.
+    uint8_t low = memoryBus->Read(address);
+    uint8_t high = memoryBus->Read((address & 0xFF00) | (address + 1) & 0x00FF);
+
+    return high << 8 | low;
 }
 
 
