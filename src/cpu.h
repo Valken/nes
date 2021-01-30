@@ -145,6 +145,8 @@ private:
 	void BRK(Operand const&);
 	void NOP(Operand const&);
 	void RTI(Operand const&);
+
+    uint16_t ReadBugged(uint16_t pointer) const;
 };
 
 } // nes

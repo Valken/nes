@@ -254,6 +254,44 @@ TEST_F(CPUTests, JMPAbsoluteSetsProgramCounter)
     EXPECT_EQ(cycles, 3);
 }
 
+TEST_F(CPUTests, JMPIndirectSetsProgramCounter)
+{
+    // 0x0022 contains a pointer to 0x2000
+    cpu.memoryBus->Write(0x1000, 0x6C);
+    cpu.memoryBus->Write(0x1001, 0x22);
+    cpu.memoryBus->Write(0x1002, 0x00);
+    cpu.memoryBus->Write(0x0022, 0x00);
+    cpu.memoryBus->Write(0x0023, 0x20);
+
+    cpu.Reset();
+    uint8_t cycles = 0;
+    uint8_t flags = cpu.s;
+    cycles += cpu.Step();
+
+    EXPECT_TRUE(!(flags ^ cpu.s));
+    EXPECT_EQ(cpu.pc, 0x2000);
+    EXPECT_EQ(cycles, 5);
+}
+
+TEST_F(CPUTests, JMPIndirectSetsProgramCounterBug)
+{
+    // 0x0022 contains a pointer to 0x2000
+    cpu.memoryBus->Write(0x1000, 0x6C);
+    cpu.memoryBus->Write(0x1001, 0xFF);
+    cpu.memoryBus->Write(0x1002, 0x01);
+    cpu.memoryBus->Write(0x01FF, 0x00);
+    cpu.memoryBus->Write(0x0100, 0x20);
+
+    cpu.Reset();
+    uint8_t cycles = 0;
+    uint8_t flags = cpu.s;
+    cycles += cpu.Step();
+
+    EXPECT_TRUE(!(flags ^ cpu.s));
+    EXPECT_EQ(cpu.pc, 0x2000);
+    EXPECT_EQ(cycles, 5);
+}
+
 #if 0
 class CpuIntructionTests : public ::testing::TestWithParam<int>
 {

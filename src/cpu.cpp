@@ -44,7 +44,7 @@ uint8_t CPU::Step()
     pc += instructionInfo.instructionSize;
     std::invoke(instructionInfo.instruction, this, operand);
 
-    return instructionInfo.cycles + (operand.pageCrossed ? 1 : 0);
+    return instructionInfo.cycles + (operand.pageCrossed ? instructionInfo.pageCycles : 0);
 }
 
 void CPU::Reset()
@@ -115,6 +115,9 @@ Operand CPU::Decode(AddressMode addressMode) const
             break;
 
         case AddressMode::Indirect:
+            address = ReadBugged(Read16(pc + 1));
+        break;
+
         case AddressMode::IndexedIndirect:
         case AddressMode::IndirectIndexed:
         default:
@@ -132,6 +135,21 @@ uint16_t CPU::Read16(uint16_t address) const
 
     return (hi << 8) | lo;
 }
+
+uint16_t CPU::ReadBugged(uint16_t pointer) const
+{
+    if (pointer & 0x00FF > 0)
+    {
+        uint8_t low = memoryBus->Read(pointer);
+        uint8_t high = memoryBus->Read((pointer & 0xFF00));
+        return (high << 8) | low;
+    }
+    else
+    {
+        return Read16(pointer);
+    }
+}
+
 
 InstructionInfo CPU::InstructionInfo[256] =
 {
@@ -249,7 +267,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x69 */ {},
     /* 0x6A */ {},
     /* 0x6B */ {},
-    /* 0x6C */ {},
+    /* 0x6C */ { &CPU::JMP, AddressMode::Indirect, 3, 5, 0 },
     /* 0x6D */ {},
     /* 0x6E */ {},
     /* 0x6F */ {},
