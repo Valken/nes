@@ -81,6 +81,15 @@ TEST_F(CPUTests, LDAAbsolutePutsValueInARegister)
     EXPECT_EQ(cpu.pc, 0x1000 + 3); // Intruction + 2 bytes for address
 }
 
+TEST_F(CPUTests, NOPExecutes)
+{
+    cpu.memoryBus->Write(0x1000, 0xEA);
+    cpu.Reset();
+    cpu.Step();
+
+    EXPECT_EQ(cpu.pc, 0x1000 + 1);
+}
+
 #if 0
 class CpuIntructionTests : public ::testing::TestWithParam<int>
 {

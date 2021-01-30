@@ -72,13 +72,12 @@ struct CPU
 	void Reset();
 
 private:
-	uint8_t Fetch(); // Read current opcode from PC, advance PC by instruction size
+	uint8_t Fetch(); // Read current opcode from PC, right now, does NOT inc PC, step does all that.
 	Operand Decode(AddressMode addressMode) const;
+    uint16_t Read16(uint16_t address) const;
 
 	// Instructions from http://www.obelisk.me.uk/6502/instructions.html
     static InstructionInfo InstructionInfo[256];
-
-    uint16_t Read16(uint16_t address) const;
     
 	// Load/Store Operations
 	void LDA(Operand const&);
