@@ -3,6 +3,25 @@
 #include <functional>
 #include <cassert>
 
+enum CpuFlags
+{
+    C = (1 << 0), // Carry
+    Z = (1 << 1), // Zero
+    I = (1 << 2), // Interrupt
+    D = (1 << 3), // Decimal
+    B = (1 << 4), // Break
+    U = (1 << 5), // Unused
+    V = (1 << 6), // Overflow
+    N = (1 << 7), // Negative
+};
+
+static uint8_t SetZN(uint8_t flags, uint8_t value)
+{
+    if (value == 0) flags |= Z;
+    if (value & 0x80) flags |= N;
+    return  flags;
+}
+
 namespace nes
 {
 
@@ -89,7 +108,7 @@ Operand CPU::Decode(AddressMode addressMode) const
             break;
     }
     
-    return Operand { .value = address, .address = address, .addressMode = addressMode };
+    return Operand { .address = address, .addressMode = addressMode };
 }
 
 uint16_t CPU::Read16(uint16_t address) const
@@ -272,9 +291,9 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x9E */ {},
     /* 0x9F */ {},
 
-    /* 0xA0 */ { },
-    /* 0xA1 */ { &CPU::LDA, AddressMode::Immediate, 2, 2, 0 },
-    /* 0xA2 */ { },
+    /* 0xA0 */ {},
+    /* 0xA1 */ { &CPU::LDA, AddressMode::IndexedIndirect, 2, 6, 0 },
+    /* 0xA2 */ { &CPU::LDX, AddressMode::Immediate, 2, 2, 0},
     /* 0xA3 */ {},
     /* 0xA4 */ {},
     /* 0xA5 */ { &CPU::LDA, AddressMode::ZeroPage, 2, 3, 0 },
@@ -290,7 +309,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xAF */ {},
 
     /* 0xB0 */ {},
-    /* 0xB1 */ {},
+    /* 0xB1 */ { &CPU::LDA, AddressMode::IndirectIndexed, 2, 5, 1 },
     /* 0xB2 */ {},
     /* 0xB3 */ {},
     /* 0xB4 */ {},
@@ -375,36 +394,37 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xFF */ {}
 };
 
-
 // Load/Store Operations
 
 void CPU::LDA(Operand const& operand)
 {
-    a = memoryBus->Read(operand.value);
-
+    a = memoryBus->Read(operand.address);
+    s = SetZN(s, a);
 }
 
 void CPU::LDX(Operand const& operand)
 {
-    x = memoryBus->Read(operand.value);
+    x = memoryBus->Read(operand.address);
 }
 
 void CPU::LDY(Operand const& operand)
 {
-    y = memoryBus->Read(operand.value);
+    y = memoryBus->Read(operand.address);
 }
 
 void CPU::STA(Operand const& operand)
 {
-    memoryBus->Write(operand.value, a);
+    memoryBus->Write(operand.address, a);
 }
 
-void CPU::STX(Operand const&)
+void CPU::STX(Operand const& operand)
 {
+    memoryBus->Write(operand.address, x);
 }
 
-void CPU::STY(Operand const&)
+void CPU::STY(Operand const& operand)
 {
+    memoryBus->Write(operand.address, y);
 }
 
 // Register Transfers
