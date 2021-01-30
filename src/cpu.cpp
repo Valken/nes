@@ -22,6 +22,11 @@ static uint8_t SetZN(uint8_t flags, uint8_t value)
     return  flags;
 }
 
+static bool AddressPagesDifferent(uint16_t a, uint16_t b)
+{
+    return (a & 0xFF00) != (b & 0xFF00);
+}
+
 namespace nes
 {
 
@@ -29,7 +34,7 @@ CPU::CPU(Memory* const memoryBus) : pc(0x0000), a(0), x(0), y(0), s(0x00), memor
 {
 }
 
-void CPU::Step()
+uint8_t CPU::Step()
 {
     // Interrupt?
 
@@ -39,7 +44,7 @@ void CPU::Step()
     std::invoke(instructionInfo.instruction, this, operand);
     pc += instructionInfo.instructionSize;
 
-    // Return num cycles
+    return instructionInfo.cycles + (operand.pageCrossed ? 1 : 0);
 }
 
 void CPU::Reset()
@@ -101,12 +106,12 @@ Operand CPU::Decode(AddressMode addressMode) const
             // Compare high bits of address BEFORE index offset and AFTER
             // If they're different, we've crossed another to another page of
             // memory which is an additional cycle
-            pageCrossed = (address - x & 0xFF00) != (address & 0xFF00);
+            pageCrossed = AddressPagesDifferent(address - x, address);
             break;
 
         case AddressMode::AbsoluteY:
             address = Read16(pc + 1) + y;
-            pageCrossed = (address - y & 0xFF00) != (address & 0xFF00);
+            pageCrossed = AddressPagesDifferent(address - y, address);
             break;
 
         case AddressMode::Indirect:
@@ -414,11 +419,13 @@ void CPU::LDA(Operand const& operand)
 void CPU::LDX(Operand const& operand)
 {
     x = memoryBus->Read(operand.address);
+    s = SetZN(s, x);
 }
 
 void CPU::LDY(Operand const& operand)
 {
     y = memoryBus->Read(operand.address);
+    s = SetZN(s, y);
 }
 
 void CPU::STA(Operand const& operand)

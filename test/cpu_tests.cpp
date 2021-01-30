@@ -163,22 +163,27 @@ TEST_F(CPUTests, LDAAbsolutePutsValueInARegister)
     EXPECT_EQ(cpu.pc, 0x1000 + 3); // Intruction + 2 bytes for address
 }
 
-TEST_F(CPUTests, LDAAbsoluteXPutsValueInARegister)
+TEST_F(CPUTests, LDAAbsoluteXPutsValueInARegisterAndPageCrosses)
 {
     cpu.memoryBus->Write(0x1000, 0xA2);
-    cpu.memoryBus->Write(0x1001, 0x89);
+    cpu.memoryBus->Write(0x1001, 0x01);
 
+    // This address was chosen so that adding the 1 in x register means memory page crossed.
+    // This results in an extra cycle which we test for below
     cpu.memoryBus->Write(0x1002, 0xBD);
-    cpu.memoryBus->Write(0x1003, 0x00);
-    cpu.memoryBus->Write(0x1004, 0x20);
+    cpu.memoryBus->Write(0x1003, 0xFF);
+    cpu.memoryBus->Write(0x1004, 0x00);
 
-    cpu.memoryBus->Write(0x2089, 42);
+    cpu.memoryBus->Write(0x0100, 42);
+
+    uint8_t cycles = 0;
 
     cpu.Reset();
-    cpu.Step();
-    cpu.Step();
+    cycles += cpu.Step();
+    cycles += cpu.Step();
 
     EXPECT_EQ(cpu.a, 42);
+    EXPECT_EQ(cycles, 2 + 4 + 1);
 }
 
 TEST_F(CPUTests, LDAAbsoluteYPutsValueInARegister)
@@ -192,11 +197,14 @@ TEST_F(CPUTests, LDAAbsoluteYPutsValueInARegister)
 
     cpu.memoryBus->Write(0x2089, 42);
 
+    uint8_t cycles = 0;
+
     cpu.Reset();
-    cpu.Step();
-    cpu.Step();
+    cycles += cpu.Step();
+    cycles += cpu.Step();
 
     EXPECT_EQ(cpu.a, 42);
+    EXPECT_EQ(cycles, 2 + 4);
 }
 
 TEST_F(CPUTests, LDAOfZeroSetsZeroFlag)

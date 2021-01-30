@@ -57,7 +57,7 @@ struct CPU
 	~CPU() = default;
 	// Rule of 5 here?
 
-	void Step(); // This shouod return the number of cycles taken for step.
+    uint8_t Step();
 	void Reset();
 
 private:
