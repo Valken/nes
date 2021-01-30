@@ -130,15 +130,15 @@ Operand CPU::Decode(AddressMode addressMode) const
 
 uint16_t CPU::Read16(uint16_t address) const
 {
-    uint16_t lo = memoryBus->Read(address);
-    uint16_t hi = memoryBus->Read(address + 1);
+    uint8_t low = memoryBus->Read(address);
+    uint8_t high = memoryBus->Read(address + 1);
 
-    return (hi << 8) | lo;
+    return (high << 8) | low;
 }
 
 uint16_t CPU::ReadBugged(uint16_t pointer) const
 {
-    if (pointer & 0x00FF > 0)
+    if ((pointer & 0x00FF) == 0x00FF)
     {
         uint8_t low = memoryBus->Read(pointer);
         uint8_t high = memoryBus->Read((pointer & 0xFF00));
