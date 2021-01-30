@@ -1,11 +1,12 @@
 #include "cpu.h"
 #include "memory.h"
 #include <functional>
+#include <cassert>
 
 namespace nes
 {
 
-CPU::CPU(Memory* const memoryBus) : pc(0x0000), a(0), x(0), y(0), s(0xFD), memoryBus(memoryBus)
+CPU::CPU(Memory* const memoryBus) : pc(0x0000), a(0), x(0), y(0), s(0x00), memoryBus(memoryBus)
 {
 }
 
@@ -13,16 +14,27 @@ void CPU::Step()
 {
     // Interrupt?
 
-    auto programCounter = pc;
     auto instruction = Fetch();
     auto instructionInfo = InstructionInfo[instruction];
-    pc += instructionInfo.instructionSize;
-    
     auto operand = Decode(instructionInfo.addressMode);
-    
     std::invoke(instructionInfo.instruction, this, operand);
+    pc += instructionInfo.instructionSize;
 
     // Return num cycles
+}
+
+void CPU::Reset()
+{
+    a = 0x00;
+    x = 0x00;
+    y = 0x00;
+
+    s = 0x00 | U;
+
+    uint16_t const resetVector = 0xFFFC;
+    pc = Read16(resetVector);
+
+    sp = 0xFD;
 }
 
 uint8_t CPU::Fetch()
@@ -62,27 +74,30 @@ Operand CPU::Decode(AddressMode addressMode) const
             
         case AddressMode::Relative:
             break;
-            
+
         case AddressMode::Absolute:
-        {
-            uint8_t low = memoryBus->Read(pc + 1);
-            uint8_t high = memoryBus->Read(pc + 2);
-            address = (high << 8) | low;
-        }
+            address = Read16(pc + 1);
             break;
-            
+
         case AddressMode::AbsoluteX:
         case AddressMode::AbsoluteY:
-            break;
-            
         case AddressMode::Indirect:
         case AddressMode::IndexedIndirect:
         case AddressMode::IndirectIndexed:
-            
+        default:
+            assert(false);
             break;
     }
     
     return Operand { .value = address, .address = address, .addressMode = addressMode };
+}
+
+uint16_t CPU::Read16(uint16_t address) const
+{
+    uint16_t lo = memoryBus->Read(address);
+    uint16_t hi = memoryBus->Read(address + 1);
+
+    return (hi << 8) | lo;
 }
 
 InstructionInfo CPU::InstructionInfo[256] =
@@ -151,7 +166,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x3A */ {},
     /* 0x3B */ {},
     /* 0x3C */ {},
-    /* 0x3D*/ { &CPU::AND, AddressMode::AbsoluteX, 3, 4, 1 },
+    /* 0x3D */ { &CPU::AND, AddressMode::AbsoluteX, 3, 4, 1 },
     /* 0x3E */ { &CPU::ROL, AddressMode::AbsoluteX, 3, 7, 0 },
     /* 0x3F */ {},
     
@@ -287,7 +302,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xBA */ { &CPU::TSX, AddressMode::Immediate, 1, 2, 0 },
     /* 0xBB */ {},
     /* 0xBC */ { &CPU::LDY, AddressMode::AbsoluteX, 3, 4, 1 },
-    /* 0xBD*/ { &CPU::LDA, AddressMode::AbsoluteX, 3, 4, 1 },
+    /* 0xBD */ { &CPU::LDA, AddressMode::AbsoluteX, 3, 4, 1 },
     /* 0xBE */ { &CPU::LDX, AddressMode::AbsoluteY, 3, 4, 1 },
     /* 0xBF */ {},
     
@@ -304,7 +319,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xCA */ { &CPU::DEX, AddressMode::Implicit, 1, 2, 0 },
     /* 0xCB */ {},
     /* 0xCC */ { &CPU::CPY, AddressMode::Absolute, 3, 4, 0 },
-    /* 0xCD*/ { &CPU::CMP, AddressMode::Absolute, 3, 4, 0 },
+    /* 0xCD */ { &CPU::CMP, AddressMode::Absolute, 3, 4, 0 },
     /* 0xCE */ { &CPU::DEC, AddressMode::Absolute, 3, 6, 0 },
     /* 0xCF */ {},
     
@@ -321,7 +336,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xDA */ {},
     /* 0xDB */ {},
     /* 0xDC */ {},
-    /* 0xDD*/ { &CPU::CMP, AddressMode::AbsoluteX, 3, 4, 1 },
+    /* 0xDD */ { &CPU::CMP, AddressMode::AbsoluteX, 3, 4, 1 },
     /* 0xDE */ { &CPU::DEC, AddressMode::AbsoluteX, 3, 7, 0 },
     /* 0xDF */ {},
     
@@ -347,16 +362,16 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xF2 */ {},
     /* 0xF3 */ {},
     /* 0xF4 */ {},
-    /* 0xF5 */ { &CPU::SBC, AddressMode::ZeroPageX, 2, 4, 0 },
-    /* 0xF6 */ { &CPU::INC, AddressMode::ZeroPageX, 2, 6, 0 },
+    /* 0xF5 */ {},
+    /* 0xF6 */ {},
     /* 0xF7 */ {},
-    /* 0xF8 */ { &CPU::SED, AddressMode::Implicit, 1, 2, 0 },
-    /* 0xF9 */ { &CPU::SBC, AddressMode::AbsoluteY, 3, 4, 1 },
+    /* 0xF8 */ {},
+    /* 0xF9 */ {},
     /* 0xFA */ {},
     /* 0xFB */ {},
     /* 0xFC */ {},
-    /* 0xFD */ { &CPU::SBC, AddressMode::AbsoluteX, 3, 4, 1 },
-    /* 0xFE */ { &CPU::INC, AddressMode::AbsoluteX, 3, 7 },
+    /* 0xFD */ {},
+    /* 0xFE */ {},
     /* 0xFF */ {},
 };
 
@@ -366,7 +381,6 @@ InstructionInfo CPU::InstructionInfo[256] =
 void CPU::LDA(Operand const& operand)
 {
     a = memoryBus->Read(operand.value);
-
 }
 
 void CPU::LDX(Operand const&)

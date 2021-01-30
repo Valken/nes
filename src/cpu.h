@@ -1,7 +1,7 @@
 #pragma once
 
 #include "memory.h"
-#include <stdint.h>
+#include <cstdint>
 
 namespace nes
 {
@@ -36,7 +36,7 @@ typedef void (CPU::*Instruction)(Operand const&);
 struct InstructionInfo
 {
     Instruction instruction;
-    nes::AddressMode addressMode;
+    AddressMode addressMode;
     uint8_t instructionSize;
     uint8_t cycles;
     uint8_t pageCycles;
@@ -68,7 +68,8 @@ struct CPU
 	~CPU() = default;
 	// Rule of 5 here?
 
-	void Step();
+	void Step(); // This shouod return the number of cycles taken for step.
+	void Reset();
 
 private:
 	uint8_t Fetch(); // Read current opcode from PC, advance PC by instruction size
@@ -76,6 +77,8 @@ private:
 
 	// Instructions from http://www.obelisk.me.uk/6502/instructions.html
     static InstructionInfo InstructionInfo[256];
+
+    uint16_t Read16(uint16_t address) const;
     
 	// Load/Store Operations
 	void LDA(Operand const&);
