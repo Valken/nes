@@ -64,7 +64,8 @@ uint8_t CPU::Fetch()
 Operand CPU::Decode(AddressMode addressMode) const
 {
     uint16_t address = 0x00;
-    
+    bool pageCrossed = false;
+
     switch (addressMode)
     {
         case AddressMode::Implicit:
@@ -96,7 +97,18 @@ Operand CPU::Decode(AddressMode addressMode) const
             break;
 
         case AddressMode::AbsoluteX:
+            address = Read16(pc + 1) + x;
+            // Compare high bits of address BEFORE index offset and AFTER
+            // If they're different, we've crossed another to another page of
+            // memory which is an additional cycle
+            pageCrossed = (address - x & 0xFF00) != (address & 0xFF00);
+            break;
+
         case AddressMode::AbsoluteY:
+            address = Read16(pc + 1) + y;
+            pageCrossed = (address - y & 0xFF00) != (address & 0xFF00);
+            break;
+
         case AddressMode::Indirect:
         case AddressMode::IndexedIndirect:
         case AddressMode::IndirectIndexed:
@@ -105,7 +117,7 @@ Operand CPU::Decode(AddressMode addressMode) const
             break;
     }
     
-    return Operand { .address = address, .addressMode = addressMode };
+    return Operand { .address = address, .addressMode = addressMode, .pageCrossed = pageCrossed };
 }
 
 uint16_t CPU::Read16(uint16_t address) const

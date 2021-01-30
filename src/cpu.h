@@ -27,6 +27,7 @@ struct Operand
 {
     uint16_t address;
     AddressMode addressMode;
+    bool pageCrossed;
 };
 
 class CPU;
