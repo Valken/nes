@@ -74,7 +74,7 @@ TEST_F(CPUTests, LDAImmediatePutsValueInARegister)
 TEST_F(CPUTests, LDAZeroPagePutsValueInRegister)
 {
     cpu.memoryBus->Write(0x1000, 0xA5);
-    cpu.memoryBus->Write(0x1001, 0x0010);
+    cpu.memoryBus->Write(0x1001, 0x10);
     cpu.memoryBus->Write(0x0010, 42);
     cpu.Reset();
     uint8_t flags = cpu.s;
@@ -93,7 +93,7 @@ TEST_F(CPUTests, LDAZeroPageXPutsValueInRegister)
 
     // LDA $10,X
     cpu.memoryBus->Write(0x1002, 0xB5);
-    cpu.memoryBus->Write(0x1003, 0x0010);
+    cpu.memoryBus->Write(0x1003, 0x10);
 
     // Put 42 into the address of instruction above, offset by the value we write to X register
     cpu.memoryBus->Write(0x0015, 42);
@@ -104,6 +104,48 @@ TEST_F(CPUTests, LDAZeroPageXPutsValueInRegister)
 
     EXPECT_EQ(cpu.x, 5);
     EXPECT_EQ(cpu.a, 42);
+}
+
+TEST_F(CPUTests, LDAZeroPageXAddressWraps)
+{
+    // LDX #$FF
+    cpu.memoryBus->Write(0x1000, 0xA2);
+    cpu.memoryBus->Write(0x1001, 0xFF);
+
+    // LDA $80,X
+    cpu.memoryBus->Write(0x1002, 0xB5);
+    cpu.memoryBus->Write(0x1003, 0x80);
+
+    // Put 42 into the address of instruction above, offset by the value we write to X register
+    cpu.memoryBus->Write(0x007F, 42);
+
+    cpu.Reset();
+    cpu.Step();
+    cpu.Step();
+
+    EXPECT_EQ(cpu.x, 0xFF);
+    EXPECT_EQ(cpu.a, 42);
+}
+
+TEST_F(CPUTests, LDXZeroPageYPutsValueInRegister)
+{
+    // LDY #5
+    cpu.memoryBus->Write(0x1000, 0xA0);
+    cpu.memoryBus->Write(0x1001, 5);
+
+    // LDX $10,Y
+    cpu.memoryBus->Write(0x1002, 0xB6);
+    cpu.memoryBus->Write(0x1003, 0x10);
+
+    // Put 42 into the address of instruction above, offset by the value we write to X register
+    cpu.memoryBus->Write(0x0015, 42);
+
+    cpu.Reset();
+    cpu.Step();
+    cpu.Step();
+
+    EXPECT_EQ(cpu.y, 5);
+    EXPECT_EQ(cpu.x, 42);
 }
 
 TEST_F(CPUTests, LDAAbsolutePutsValueInARegister)
@@ -120,17 +162,6 @@ TEST_F(CPUTests, LDAAbsolutePutsValueInARegister)
     EXPECT_EQ(cpu.a, 42);
     EXPECT_EQ(cpu.pc, 0x1000 + 3); // Intruction + 2 bytes for address
 }
-
-//TEST_F(CPUTests, LDAIndexedXPutsValueInARegister)
-//{
-//    0xA2
-//    cpu.memoryBus->Write(0x1000, 0xA9);
-//    cpu.memoryBus->Write(0x1001, 42);
-//    cpu.Reset();
-//    cpu.Step();
-//
-//    EXPECT_EQ(cpu.a, 42);
-//}
 
 TEST_F(CPUTests, LDAOfZeroSetsZeroFlag)
 {

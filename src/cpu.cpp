@@ -68,9 +68,6 @@ Operand CPU::Decode(AddressMode addressMode) const
     switch (addressMode)
     {
         case AddressMode::Implicit:
-            address = 0;
-            break;
-            
         case AddressMode::Accumulator:
             address = 0;
             break;
@@ -291,7 +288,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x9E */ {},
     /* 0x9F */ {},
 
-    /* 0xA0 */ {},
+    /* 0xA0 */ { &CPU::LDY, AddressMode::Immediate, 2, 2, 0 },
     /* 0xA1 */ { &CPU::LDA, AddressMode::IndexedIndirect, 2, 6, 0 },
     /* 0xA2 */ { &CPU::LDX, AddressMode::Immediate, 2, 2, 0},
     /* 0xA3 */ {},
@@ -314,7 +311,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xB3 */ {},
     /* 0xB4 */ {},
     /* 0xB5 */ { &CPU::LDA, AddressMode::ZeroPageX, 2, 4, 0 },
-    /* 0xB6 */ {},
+    /* 0xB6 */ { &CPU::LDX, AddressMode::ZeroPageY, 2, 4, 0 },
     /* 0xB7 */ {},
     /* 0xB8 */ {},
     /* 0xB9 */ { &CPU::LDA, AddressMode::AbsoluteY, 3, 4, 1 },
