@@ -238,6 +238,22 @@ TEST_F(CPUTests, NOPExecutes)
     EXPECT_EQ(cpu.pc, 0x1000 + 1);
 }
 
+TEST_F(CPUTests, JMPAbsoluteSetsProgramCounter)
+{
+    cpu.memoryBus->Write(0x1000, 0x4C);
+    cpu.memoryBus->Write(0x1001, 0x21);
+    cpu.memoryBus->Write(0x1002, 0x10);
+
+    cpu.Reset();
+    uint8_t cycles = 0;
+    uint8_t flags = cpu.s;
+    cycles += cpu.Step();
+
+    EXPECT_TRUE(!(flags ^ cpu.s));
+    EXPECT_EQ(cpu.pc, 0x1021);
+    EXPECT_EQ(cycles, 3);
+}
+
 #if 0
 class CpuIntructionTests : public ::testing::TestWithParam<int>
 {

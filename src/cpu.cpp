@@ -41,8 +41,8 @@ uint8_t CPU::Step()
     auto instruction = Fetch();
     auto instructionInfo = InstructionInfo[instruction];
     auto operand = Decode(instructionInfo.addressMode);
-    std::invoke(instructionInfo.instruction, this, operand);
     pc += instructionInfo.instructionSize;
+    std::invoke(instructionInfo.instruction, this, operand);
 
     return instructionInfo.cycles + (operand.pageCrossed ? 1 : 0);
 }
@@ -215,7 +215,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x49 */ {},
     /* 0x4A */ {},
     /* 0x4B */ {},
-    /* 0x4C */ {},
+    /* 0x4C */ { &CPU::JMP, AddressMode::Absolute, 3, 3, 0 },
     /* 0x4D */ {},
     /* 0x4E */ {},
     /* 0x4F */ {},
@@ -573,8 +573,9 @@ void CPU::ROR(Operand const&)
 
 // Jumps & Calls
 
-void CPU::JMP(Operand const&)
+void CPU::JMP(Operand const& operand)
 {
+    pc = operand.address;
 }
 
 void CPU::JSR(Operand const&)
