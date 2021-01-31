@@ -11,6 +11,31 @@ TEST_F(CpuTests, Reset_Tests_State)
     EXPECT_EQ(cpu.s, 0b00100000); // Unused bit should be the only one that's set
 }
 
+TEST(StackTest, Push)
+{
+    TestMemory memory;
+    nes::CPU cpu(&memory);
+    cpu.Reset();
+
+    cpu.Push(42);
+
+    EXPECT_EQ(cpu.sp, 0xFD - 1);
+    EXPECT_EQ(memory.Read(0x1FD), 42);
+}
+
+TEST(StackTest, Pop)
+{
+    TestMemory memory;
+    nes::CPU cpu(&memory);
+    cpu.Reset();
+
+    cpu.Push(42);
+    auto value = cpu.Pop();
+
+    EXPECT_EQ(cpu.sp, 0xFD);
+    EXPECT_EQ(value, 42);
+}
+
 #if 0
 class CpuIntructionTests : public ::testing::TestWithParam<int>
 {

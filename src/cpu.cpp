@@ -165,6 +165,20 @@ uint16_t CPU::ReadBugged(uint16_t address) const
     return high << 8 | low;
 }
 
+void CPU::Push(uint8_t value)
+{
+    uint16_t address = 0x100 | sp;
+    memoryBus->Write(address, value);
+    sp--;
+}
+
+uint8_t CPU::Pop()
+{
+    sp++;
+    uint16_t address = 0x100 | sp;
+    return memoryBus->Read(address);
+}
+
 InstructionInfo CPU::InstructionInfo[256] =
 {
     /* 0x00 */ {},

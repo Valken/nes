@@ -49,7 +49,7 @@ struct CPU
 	uint8_t x;
 	uint8_t y;
     uint8_t s;
-    uint16_t sp; // Stack pointer
+    uint8_t sp; // Low byte of stack pointer. High byte is always 0x01
 
     Memory* const memoryBus;
 
@@ -63,9 +63,13 @@ struct CPU
 private:
 	uint8_t Fetch(); // Read current opcode from PC, right now, does NOT inc PC, step does all that.
 	Operand Decode(AddressMode addressMode) const;
+
     uint16_t Read16(uint16_t address) const;
     uint16_t ReadBugged(uint16_t address) const;
-
+public:
+    void Push(uint8_t value);
+    uint8_t Pop();
+private:
 	// Instructions from http://www.obelisk.me.uk/6502/instructions.html
     static InstructionInfo InstructionInfo[256];
     
