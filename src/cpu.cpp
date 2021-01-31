@@ -24,6 +24,9 @@ static uint8_t SetZN(uint8_t flags, uint8_t value)
 
 static bool AddressPagesDifferent(uint16_t a, uint16_t b)
 {
+    // Compare high bits of two address.If they're different,
+    // we've crossed another to another page of memory which
+    // is an additional cycle
     return (a & 0xFF00) != (b & 0xFF00);
 }
 
@@ -66,6 +69,10 @@ uint8_t CPU::Fetch()
     return memoryBus->Read(pc);
 }
 
+// Some docs on addressing modes
+// http://www.obelisk.me.uk/6502/addressing.html
+// http://www.emulator101.com/6502-addressing-modes.html
+// http://wiki.nesdev.com/w/index.php/CPU_addressing_modes
 Operand CPU::Decode(AddressMode addressMode) const
 {
     uint16_t address = 0x00;
@@ -95,6 +102,7 @@ Operand CPU::Decode(AddressMode addressMode) const
             break;
             
         case AddressMode::Relative:
+            assert(false);
             break;
 
         case AddressMode::Absolute:
@@ -103,9 +111,6 @@ Operand CPU::Decode(AddressMode addressMode) const
 
         case AddressMode::AbsoluteX:
             address = Read16(pc + 1) + x;
-            // Compare high bits of address BEFORE index offset and AFTER
-            // If they're different, we've crossed another to another page of
-            // memory which is an additional cycle
             pageCrossed = AddressPagesDifferent(address - x, address);
             break;
 
@@ -116,10 +121,24 @@ Operand CPU::Decode(AddressMode addressMode) const
 
         case AddressMode::Indirect:
             address = ReadBugged(Read16(pc + 1));
-        break;
+            break;
 
         case AddressMode::IndexedIndirect:
+            {
+                uint16_t arg = memoryBus->Read(pc + 1);
+                address = memoryBus->Read((arg + x + 1) & 0xFF) << 8 | memoryBus->Read((arg + x) & 0xFF);
+            }
+            break;
+
         case AddressMode::IndirectIndexed:
+            {
+                uint16_t arg = memoryBus->Read(pc + 1);
+                uint16_t low = memoryBus->Read(arg & 0xFF);
+                uint16_t high = memoryBus->Read((arg + 1) & 0xFF);
+                address = (high << 8 | low) + y;
+                pageCrossed = AddressPagesDifferent(address - y, address);
+            }
+            break;
         default:
             assert(false);
             break;
@@ -141,11 +160,10 @@ uint16_t CPU::ReadBugged(uint16_t address) const
     // Used for indirect addressing. If lsb of value is on page boundary then
     // the the msb wraps around to the start of the page again.
     uint8_t low = memoryBus->Read(address);
-    uint8_t high = memoryBus->Read((address & 0xFF00) | (address + 1) & 0x00FF);
+    uint8_t high = memoryBus->Read((address & 0xFF00) | ((address + 1) & 0x00FF));
 
     return high << 8 | low;
 }
-
 
 InstructionInfo CPU::InstructionInfo[256] =
 {
@@ -286,11 +304,11 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x7F */ {},
 
     /* 0x80 */ {},
-    /* 0x81 */ {},
+    /* 0x81 */ { &CPU::STA, AddressMode::IndexedIndirect, 2, 6, 0 },
     /* 0x82 */ {},
     /* 0x83 */ {},
     /* 0x84 */ {},
-    /* 0x85 */ {},
+    /* 0x85 */ { &CPU::STA, AddressMode::ZeroPage, 2, 3, 0 },
     /* 0x86 */ {},
     /* 0x87 */ {},
     /* 0x88 */ {},
@@ -298,24 +316,24 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x8A */ {},
     /* 0x8B */ {},
     /* 0x8C */ {},
-    /* 0x8D */ {},
+    /* 0x8D */ { &CPU::STA, AddressMode::Absolute, 3, 4, 0 },
     /* 0x8E */ {},
     /* 0x8F */ {},
 
     /* 0x90 */ {},
-    /* 0x91 */ {},
+    /* 0x91 */ { &CPU::STA, AddressMode::IndirectIndexed, 2, 6, 0 },
     /* 0x92 */ {},
     /* 0x93 */ {},
     /* 0x94 */ {},
-    /* 0x95 */ {},
+    /* 0x95 */ { &CPU::STA, AddressMode::ZeroPageX, 2, 4, 0 },
     /* 0x96 */ {},
     /* 0x97 */ {},
     /* 0x98 */ {},
-    /* 0x99 */ {},
+    /* 0x99 */ { &CPU::STA, AddressMode::AbsoluteY, 3, 5, 0 },
     /* 0x9A */ {},
     /* 0x9B */ {},
     /* 0x9C */ {},
-    /* 0x9D */ {},
+    /* 0x9D */ { &CPU::STA, AddressMode::AbsoluteX, 3, 5, 0 },
     /* 0x9E */ {},
     /* 0x9F */ {},
 

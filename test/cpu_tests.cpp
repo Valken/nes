@@ -207,6 +207,55 @@ TEST_F(CPUTests, LDAAbsoluteYPutsValueInARegister)
     EXPECT_EQ(cycles, 2 + 4);
 }
 
+TEST_F(CPUTests, LDAIndexedIndirectPutsValueInARegister)
+{
+    // LDX #$04
+    cpu.memoryBus->Write(0x1000, 0xA2);
+    cpu.memoryBus->Write(0x1001, 0x04);
+
+    cpu.memoryBus->Write(0x1002, 0xA1);
+    cpu.memoryBus->Write(0x1003, 0x20);
+
+    cpu.memoryBus->Write(0x0024, 0x74);
+    cpu.memoryBus->Write(0x0025, 0x20);
+
+    cpu.memoryBus->Write(0x2074, 42);
+
+    uint8_t cycles = 0;
+
+    cpu.Reset();
+    cycles += cpu.Step();
+    cycles += cpu.Step();
+
+    EXPECT_EQ(cpu.a, 42);
+    EXPECT_EQ(cycles, 2 + 6);
+}
+
+TEST_F(CPUTests, LDAIndirectIndexedtPutsValueInARegister)
+{
+    // LDY #$10
+    cpu.memoryBus->Write(0x1000, 0xA0);
+    cpu.memoryBus->Write(0x1001, 0x10);
+
+    // LDA ($86),Y
+    cpu.memoryBus->Write(0x1002, 0xB1);
+    cpu.memoryBus->Write(0x1003, 0x86);
+
+    //  Set up memory
+    cpu.memoryBus->Write(0x0086, 0x28);
+    cpu.memoryBus->Write(0x0087, 0x40);
+    cpu.memoryBus->Write(0x4038, 42);
+
+    uint8_t cycles = 0;
+
+    cpu.Reset();
+    cycles += cpu.Step();
+    cycles += cpu.Step();
+
+    EXPECT_EQ(cpu.a, 42);
+    EXPECT_EQ(cycles, 2 + 5 /* page crosses is a thing here... */);
+}
+
 TEST_F(CPUTests, LDAOfZeroSetsZeroFlag)
 {
     cpu.memoryBus->Write(0x1000, 0xA9);
@@ -229,6 +278,15 @@ TEST_F(CPUTests, LDAOfNegativeValueSetsNegativeFlag)
     EXPECT_TRUE(cpu.s & (1 << 7));
 }
 
+// STA
+
+TEST_F(CPUTests, STAZeroPageWritesToMemory)
+{
+
+}
+
+// NOP
+
 TEST_F(CPUTests, NOPExecutes)
 {
     cpu.memoryBus->Write(0x1000, 0xEA);
@@ -237,6 +295,8 @@ TEST_F(CPUTests, NOPExecutes)
 
     EXPECT_EQ(cpu.pc, 0x1000 + 1);
 }
+
+// JMP
 
 TEST_F(CPUTests, JMPAbsoluteSetsProgramCounter)
 {

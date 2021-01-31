@@ -64,6 +64,7 @@ private:
 	uint8_t Fetch(); // Read current opcode from PC, right now, does NOT inc PC, step does all that.
 	Operand Decode(AddressMode addressMode) const;
     uint16_t Read16(uint16_t address) const;
+    uint16_t ReadBugged(uint16_t address) const;
 
 	// Instructions from http://www.obelisk.me.uk/6502/instructions.html
     static InstructionInfo InstructionInfo[256];
@@ -145,8 +146,6 @@ private:
 	void BRK(Operand const&);
 	void NOP(Operand const&);
 	void RTI(Operand const&);
-
-    uint16_t ReadBugged(uint16_t address) const;
 };
 
 } // nes
