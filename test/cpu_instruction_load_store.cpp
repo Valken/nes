@@ -373,3 +373,30 @@ TEST_F(CpuTests, STA_IndirectIndexed_Writes_A)
     EXPECT_EQ(cpu.memoryBus->Read(0x4038), 42);
     EXPECT_EQ(cycles, 2 + 2 + 6);
 }
+
+TEST_F(CpuTests, STX_ZeroPage_Writes_X)
+{
+    cpu.Reset();
+    cpu.x = 42;
+
+    cpu.memoryBus->Write(0x1000, 0x86);
+    cpu.memoryBus->Write(0x1001, 0x12);
+
+    cpu.Step();
+
+    EXPECT_EQ(cpu.memoryBus->Read(0x0012), 42);
+}
+
+TEST_F(CpuTests, STY_ZeroPageX_Writes_Y)
+{
+    cpu.Reset();
+    cpu.x = 10;
+    cpu.y = 42;
+
+    cpu.memoryBus->Write(0x1000, 0x94);
+    cpu.memoryBus->Write(0x1001, 0x12);
+
+    cpu.Step();
+
+    EXPECT_EQ(cpu.memoryBus->Read(0x0012 + 10), 42);
+}
