@@ -282,7 +282,154 @@ TEST_F(CPUTests, LDAOfNegativeValueSetsNegativeFlag)
 
 TEST_F(CPUTests, STAZeroPageWritesToMemory)
 {
+    // LDA #42
+    cpu.memoryBus->Write(0x1000, 0xA9);
+    cpu.memoryBus->Write(0x1001, 42);
 
+    cpu.memoryBus->Write(0x1002, 0x85);
+    cpu.memoryBus->Write(0x1003, 0x7F);
+
+    uint8_t cycles = 0;
+
+    cpu.Reset();
+    cycles += cpu.Step();
+    cycles += cpu.Step();
+
+    EXPECT_EQ(memory.Read(0x007F), 42);
+    EXPECT_EQ(cycles, 2 + 3);
+}
+
+TEST_F(CPUTests, STAZeroPageXWritesToMemory)
+{
+    // LDA #42
+    cpu.memoryBus->Write(0x1000, 0xA9);
+    cpu.memoryBus->Write(0x1001, 42);
+
+    // LDX #$FF
+    cpu.memoryBus->Write(0x1002, 0xA2);
+    cpu.memoryBus->Write(0x1003, 0xFF);
+
+    // STA #$80,X
+    cpu.memoryBus->Write(0x1004, 0x95);
+    cpu.memoryBus->Write(0x1005, 0x80);
+
+    uint8_t cycles = 0;
+
+    cpu.Reset();
+    cycles += cpu.Step();
+    cycles += cpu.Step();
+    cycles += cpu.Step();
+
+    EXPECT_EQ(memory.Read(0x007F), 42);
+    EXPECT_EQ(cycles, 2 + 2 + 4);
+}
+
+TEST_F(CPUTests, STAAbsoluteWritesToMemory)
+{
+    cpu.memoryBus->Write(0x1000, 0xA9);
+    cpu.memoryBus->Write(0x1001, 42);
+    cpu.memoryBus->Write(0x1002, 0x8D);
+    cpu.memoryBus->Write(0x1003, 0x34);
+    cpu.memoryBus->Write(0x1004, 0x12);
+
+    uint8_t cycles = 0;
+
+    cpu.Reset();
+    cycles += cpu.Step();
+    cycles += cpu.Step();
+
+    EXPECT_EQ(memory.Read(0x1234), 42);
+    EXPECT_EQ(cycles, 2 + 4);
+}
+
+TEST_F(CPUTests, STAAbsoluteXWritesToMemory)
+{
+    cpu.memoryBus->Write(0x1000, 0xA9);
+    cpu.memoryBus->Write(0x1001, 42);
+    cpu.memoryBus->Write(0x1002, 0xA2);
+    cpu.memoryBus->Write(0x1003, 0x01);
+    cpu.memoryBus->Write(0x1004, 0x9D);
+    cpu.memoryBus->Write(0x1005, 0x34);
+    cpu.memoryBus->Write(0x1006, 0x12);
+
+    uint8_t cycles = 0;
+
+    cpu.Reset();
+    cycles += cpu.Step();
+    cycles += cpu.Step();
+    cycles += cpu.Step();
+
+    EXPECT_EQ(memory.Read(0x1235), 42);
+    EXPECT_EQ(cycles, 2 + 2 + 5);
+}
+
+TEST_F(CPUTests, STAAbsoluteYWritesToMemory)
+{
+    cpu.memoryBus->Write(0x1000, 0xA9);
+    cpu.memoryBus->Write(0x1001, 42);
+    cpu.memoryBus->Write(0x1002, 0xA0);
+    cpu.memoryBus->Write(0x1003, 0x01);
+    cpu.memoryBus->Write(0x1004, 0x99);
+    cpu.memoryBus->Write(0x1005, 0x34);
+    cpu.memoryBus->Write(0x1006, 0x12);
+
+    uint8_t cycles = 0;
+
+    cpu.Reset();
+    cycles += cpu.Step();
+    cycles += cpu.Step();
+    cycles += cpu.Step();
+
+    EXPECT_EQ(memory.Read(0x1235), 42);
+    EXPECT_EQ(cycles, 2 + 2 + 5);
+}
+
+TEST_F(CPUTests, STAIndexedIndirectWritesToMemory)
+{
+    cpu.memoryBus->Write(0x1000, 0xA9);
+    cpu.memoryBus->Write(0x1001, 42);
+    cpu.memoryBus->Write(0x1002, 0xA2);
+    cpu.memoryBus->Write(0x1003, 0x04);
+    cpu.memoryBus->Write(0x1004, 0x81);
+    cpu.memoryBus->Write(0x1005, 0x20);
+
+    cpu.memoryBus->Write(0x0024, 0x74);
+    cpu.memoryBus->Write(0x0025, 0x20);
+
+
+    uint8_t cycles = 0;
+
+    cpu.Reset();
+    cycles += cpu.Step();
+    cycles += cpu.Step();
+    cycles += cpu.Step();
+
+    EXPECT_EQ(cpu.memoryBus->Read(0x2074), 42);
+    EXPECT_EQ(cycles, 2 + 2 + 6);
+}
+
+TEST_F(CPUTests, STAIndirectIndexedWritesToMemory)
+{
+    cpu.memoryBus->Write(0x1000, 0xA9);
+    cpu.memoryBus->Write(0x1001, 42);
+    cpu.memoryBus->Write(0x1002, 0xA0);
+    cpu.memoryBus->Write(0x1003, 0x10);
+    cpu.memoryBus->Write(0x1004, 0x91);
+    cpu.memoryBus->Write(0x1005, 0x86);
+
+    cpu.memoryBus->Write(0x0086, 0x28);
+    cpu.memoryBus->Write(0x0087, 0x40);
+    cpu.memoryBus->Write(0x4038, 42);
+
+    uint8_t cycles = 0;
+
+    cpu.Reset();
+    cycles += cpu.Step();
+    cycles += cpu.Step();
+    cycles += cpu.Step();
+
+    EXPECT_EQ(cpu.memoryBus->Read(0x4038), 42);
+    EXPECT_EQ(cycles, 2 + 2 + 6);
 }
 
 // NOP
