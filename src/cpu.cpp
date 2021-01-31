@@ -189,7 +189,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x05 */ {},
     /* 0x06 */ {},
     /* 0x07 */ {},
-    /* 0x08 */ {},
+    /* 0x08 */ { &CPU::PHP, AddressMode::Implicit, 1, 3, 0 },
     /* 0x09 */ {},
     /* 0x0A */ {},
     /* 0x0B */ {},
@@ -223,7 +223,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x25 */ {},
     /* 0x26 */ {},
     /* 0x27 */ {},
-    /* 0x28 */ {},
+    /* 0x28 */ { &CPU::PLP, AddressMode::Implicit, 1, 4, 0 },
     /* 0x29 */ {},
     /* 0x2A */ {},
     /* 0x2B */ {},
@@ -257,7 +257,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x45 */ {},
     /* 0x46 */ {},
     /* 0x47 */ {},
-    /* 0x48 */ {},
+    /* 0x48 */ { &CPU::PHA, AddressMode::Implicit, 1, 3, 0 },
     /* 0x49 */ {},
     /* 0x4A */ {},
     /* 0x4B */ {},
@@ -291,7 +291,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x65 */ {},
     /* 0x66 */ {},
     /* 0x67 */ {},
-    /* 0x68 */ {},
+    /* 0x68 */ { &CPU::PLA, AddressMode::Implicit, 1, 4, 0 },
     /* 0x69 */ {},
     /* 0x6A */ {},
     /* 0x6B */ {},
@@ -344,7 +344,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x97 */ {},
     /* 0x98 */ { &CPU::TYA, AddressMode::Implicit, 1, 2, 0 },
     /* 0x99 */ { &CPU::STA, AddressMode::AbsoluteY, 3, 5, 0 },
-    /* 0x9A */ {},
+    /* 0x9A */ { &CPU::TSX, AddressMode::Implicit, 1, 2, 0 },
     /* 0x9B */ {},
     /* 0x9C */ {},
     /* 0x9D */ { &CPU::STA, AddressMode::AbsoluteX, 3, 5, 0 },
@@ -378,7 +378,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xB7 */ {},
     /* 0xB8 */ {},
     /* 0xB9 */ { &CPU::LDA, AddressMode::AbsoluteY, 3, 4, 1 },
-    /* 0xBA */ {},
+    /* 0xBA */ { &CPU::TSX, AddressMode::Implicit, 1, 2, 0 },
     /* 0xBB */ {},
     /* 0xBC */ {},
     /* 0xBD */ { &CPU::LDA, AddressMode::AbsoluteX, 3, 4, 1 },
@@ -519,26 +519,34 @@ void CPU::TYA(Operand const&)
 
 void CPU::TSX(Operand const&)
 {
+    x = sp;
+    s = SetZN(s, x);
 }
 
 void CPU::TXS(Operand const&)
 {
+    sp = x;
 }
 
 void CPU::PHA(Operand const&)
 {
+    Push(a);
 }
 
 void CPU::PHP(Operand const&)
-{ 
+{
+    Push(s);
 }
 
 void CPU::PLA(Operand const&)
 {
+    a = Pop();
+    s = SetZN(s, a);
 }
 
 void CPU::PLP(Operand const&)
 {
+    s = Pop();
 }
 
 // Logical
