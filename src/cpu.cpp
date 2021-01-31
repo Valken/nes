@@ -313,7 +313,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x87 */ {},
     /* 0x88 */ {},
     /* 0x89 */ {},
-    /* 0x8A */ {},
+    /* 0x8A */ { &CPU::TXA, AddressMode::Implicit, 1, 2, 0 },
     /* 0x8B */ {},
     /* 0x8C */ { &CPU::STY, AddressMode::Absolute, 3, 4, 0 },
     /* 0x8D */ { &CPU::STA, AddressMode::Absolute, 3, 4, 0 },
@@ -328,7 +328,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x95 */ { &CPU::STA, AddressMode::ZeroPageX, 2, 4, 0 },
     /* 0x96 */ { &CPU::STX, AddressMode::ZeroPageY, 2, 4, 0 },
     /* 0x97 */ {},
-    /* 0x98 */ {},
+    /* 0x98 */ { &CPU::TYA, AddressMode::Implicit, 1, 2, 0 },
     /* 0x99 */ { &CPU::STA, AddressMode::AbsoluteY, 3, 5, 0 },
     /* 0x9A */ {},
     /* 0x9B */ {},
@@ -345,9 +345,9 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xA5 */ { &CPU::LDA, AddressMode::ZeroPage, 2, 3, 0 },
     /* 0xA6 */ {},
     /* 0xA7 */ {},
-    /* 0xA8 */ {},
+    /* 0xA8 */ { &CPU::TAY, AddressMode::Implicit, 1, 2, 0 },
     /* 0xA9 */ { &CPU::LDA, AddressMode::Immediate, 2, 2, 0 },
-    /* 0xAA */ {},
+    /* 0xAA */ { &CPU::TAX, AddressMode::Implicit, 1, 2, 0 },
     /* 0xAB */ {},
     /* 0xAC */ {},
     /* 0xAD */ { &CPU::LDA, AddressMode::Absolute, 3, 4, 0 },
@@ -479,18 +479,26 @@ void CPU::STY(Operand const& operand)
 
 void CPU::TAX(Operand const&)
 {
+    x = a;
+    s = SetZN(s, x);
 }
 
 void CPU::TAY(Operand const&)
 {
+    y = a;
+    s = SetZN(s, y);
 }
 
 void CPU::TXA(Operand const&)
 {
+    a = x;
+    s = SetZN(s, a);
 }
 
 void CPU::TYA(Operand const&)
 {
+    a = y;
+    s = SetZN(s, a);
 }
 
 // Stack Operations
