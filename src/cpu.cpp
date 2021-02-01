@@ -292,7 +292,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x66 */ {},
     /* 0x67 */ {},
     /* 0x68 */ { &CPU::PLA, AddressMode::Implicit, 1, 4, 0 },
-    /* 0x69 */ {},
+    /* 0x69 */ { &CPU::ADC, AddressMode::Immediate, 2, 2, 0 },
     /* 0x6A */ {},
     /* 0x6B */ {},
     /* 0x6C */ { &CPU::JMP, AddressMode::Indirect, 3, 5, 0 },
@@ -569,8 +569,22 @@ void CPU::BIT(Operand const&)
 
 // Arithmetic
 
-void CPU::ADC(Operand const&)
+// http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
+// http://www.6502.org/tutorials/vflag.html
+// Detecting potential signed overflow is the trickiest part of this instruction.
+// I've seen a few different ways of doing it, but the docs above help UNDERSTAND it.
+void CPU::ADC(Operand const& operand)
 {
+    uint16_t const m = a;
+    uint16_t const n = memoryBus->Read(operand.address);
+    uint16_t const c = (s & C) ? 1 : 0;
+    uint16_t result = m + n + c;
+
+    a = result;
+    s = SetZN(s, a);
+    if (result > 0xFF) s |= C;
+
+    // Signed overflow?
 }
 
 void CPU::SBC(Operand const&)
