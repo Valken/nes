@@ -580,11 +580,16 @@ void CPU::ADC(Operand const& operand)
     uint16_t const c = (s & C) ? 1 : 0;
     uint16_t result = m + n + c;
 
-    a = result;
     s = SetZN(s, a);
     if (result > 0xFF) s |= C;
 
     // Signed overflow?
+    bool const signsSame = ~(n ^ m) & 0x80;
+    bool const resultSignsDifferent = (a ^ result) & 0x80;
+
+    if (signsSame && resultSignsDifferent) s |= V;
+
+    a = result;
 }
 
 void CPU::SBC(Operand const&)
