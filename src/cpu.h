@@ -30,7 +30,7 @@ struct Operand
     bool pageCrossed;
 };
 
-class CPU;
+struct CPU;
 typedef void (CPU::*Instruction)(Operand const&);
 
 struct InstructionInfo

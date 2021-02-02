@@ -35,8 +35,8 @@ public:
 class CpuTests : public ::testing::Test
 {
 public:
-    nes::CPU cpu;
     TestMemory memory;
+    nes::CPU cpu;
 
     CpuTests() : memory(), cpu(&memory)
     {
