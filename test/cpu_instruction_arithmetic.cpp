@@ -48,32 +48,35 @@ TEST_F(CpuTests, ADC_Signed_Overflow_Sets_Overflow_Bit)
 
 TEST_F(CpuTests, ADC_Can_Add_16_Bit_Number_With_Carry)
 {
-    cpu.Reset();
-
     // Picking low bytes of 0xd0 and 0x50 because the carry bit will be set
     // 0x50d0 + 0x5050 = 0xA120
     // 20688 + 20560 = 41248
 
     // https://www.masswerk.at/6502/assembler.html
-    // LDA #$d0
-    // ADC #$50
-    // STA *$10
-    // LDA #$50
-    // ADC #$50
-    // STA *$11
-    // I need a better way of loading simple programs!
-    memory.Write(0x1000, 0xA9);
-    memory.Write(0x1001, 0xd0);
-    memory.Write(0x1002, 0x69);
-    memory.Write(0x1003, 0x50);
-    memory.Write(0x1004, 0x85);
-    memory.Write(0x1005, 0x10);
-    memory.Write(0x1006, 0xA9);
-    memory.Write(0x1007, 0x50);
-    memory.Write(0x1008, 0x69);
-    memory.Write(0x1009, 0x50);
-    memory.Write(0x100A, 0x85);
-    memory.Write(0x100B, 0x11);
+    // * = $1000
+    // 1000        LDA #$D0        A9 D0
+    // 1002        ADC #$50        69 50
+    // 1004        STA *$10        85 10
+    // 1006        LDA #$50        A9 50
+    // 1008        ADC #$50        69 50
+    // 100A        STA *$11        85 11
+    // done.
+    constexpr uint8_t program[] = {
+            0xA9, 0xD0,
+            0x69, 0x50,
+            0x85, 0x10,
+            0xA9, 0x50,
+            0x69, 0x50,
+            0x85, 0x11
+    };
+
+    constexpr uint16_t offset = 0x1000;
+    for (int i = 0; i < 12; i++)
+    {
+        memory.data[offset + i] = program[i];
+    }
+
+    cpu.Reset();
 
     uint8_t cycles = 0;
     for (int i = 0; i < 6; i++)
