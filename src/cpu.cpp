@@ -139,9 +139,6 @@ Operand CPU::Decode(AddressMode addressMode) const
                 pageCrossed = AddressPagesDifferent(address - y, address);
             }
             break;
-        default:
-            assert(false);
-            break;
     }
     
     return Operand { .address = address, .addressMode = addressMode, .pageCrossed = pageCrossed };
@@ -284,11 +281,11 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x5F */ {},
 
     /* 0x60 */ {},
-    /* 0x61 */ {},
+    /* 0x61 */ { &CPU::ADC, AddressMode::IndexedIndirect, 2, 6, 0 },
     /* 0x62 */ {},
     /* 0x63 */ {},
     /* 0x64 */ {},
-    /* 0x65 */ {},
+    /* 0x65 */ { &CPU::ADC, AddressMode::ZeroPage, 2, 3, 0 },
     /* 0x66 */ {},
     /* 0x67 */ {},
     /* 0x68 */ { &CPU::PLA, AddressMode::Implicit, 1, 4, 0 },
@@ -296,24 +293,24 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x6A */ {},
     /* 0x6B */ {},
     /* 0x6C */ { &CPU::JMP, AddressMode::Indirect, 3, 5, 0 },
-    /* 0x6D */ {},
+    /* 0x6D */ { &CPU::ADC, AddressMode::Absolute, 3, 4 ,0 },
     /* 0x6E */ {},
     /* 0x6F */ {},
 
     /* 0x70 */ {},
-    /* 0x71 */ {},
+    /* 0x71 */ { &CPU::ADC, AddressMode::IndirectIndexed, 2, 5, 1 },
     /* 0x72 */ {},
     /* 0x73 */ {},
     /* 0x74 */ {},
-    /* 0x75 */ {},
+    /* 0x75 */ { &CPU::ADC, AddressMode::ZeroPageX, 2, 4, 0 },
     /* 0x76 */ {},
     /* 0x77 */ {},
     /* 0x78 */ {},
-    /* 0x79 */ {},
+    /* 0x79 */ { &CPU::ADC, AddressMode::AbsoluteY, 3, 4, 1 },
     /* 0x7A */ {},
     /* 0x7B */ {},
     /* 0x7C */ {},
-    /* 0x7D */ {},
+    /* 0x7D */ { &CPU::ADC, AddressMode::AbsoluteX, 3, 4, 1 },
     /* 0x7E */ {},
     /* 0x7F */ {},
 
