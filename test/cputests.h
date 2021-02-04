@@ -7,6 +7,7 @@
 
 #include "../src/cpu.h"
 #include <gtest/gtest.h>
+#include <span>
 
 class TestMemory : public nes::Memory
 {
@@ -30,6 +31,31 @@ public:
     {
         data[address] = value;
     }
+
+#if 0
+    template<size_t N>
+    void WriteProgram(uint8_t (&program)[N])
+    {
+        constexpr uint16_t offset = 0x1000;
+        for (size_t i = 0; i < N; i++)
+        {
+            data[offset + i] = program[i];
+        }
+    }
+#else
+    void WriteProgram(std::span<uint8_t> program)
+    {
+        if (program.size() > 0xFFFF - 0x1000) return;
+
+        constexpr size_t offset = 0x1000;
+        size_t count = 0;
+        std::for_each(program.begin(), program.end(), [&count, this](uint8_t b)
+        {
+            data[offset + count] = b;
+            count++;
+        });
+    }
+#endif
 };
 
 class CpuTests : public ::testing::Test

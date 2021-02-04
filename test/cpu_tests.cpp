@@ -20,6 +20,10 @@ TEST(StackTest, Push)
     cpu.Push(42);
 
     EXPECT_EQ(cpu.sp, 0xFD - 1);
+
+    cpu.Push(11);
+    EXPECT_EQ(cpu.sp, 0xFD - 2);
+
     EXPECT_EQ(memory.Read(0x1FD), 42);
 }
 

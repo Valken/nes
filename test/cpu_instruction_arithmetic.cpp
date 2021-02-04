@@ -61,7 +61,7 @@ TEST_F(CpuTests, ADC_Can_Add_16_Bit_Number_With_Carry)
     // 1008        ADC #$50        69 50
     // 100A        STA *$11        85 11
     // done.
-    constexpr uint8_t program[] = {
+    uint8_t program[] = {
             0xA9, 0xD0,
             0x69, 0x50,
             0x85, 0x10,
@@ -69,13 +69,7 @@ TEST_F(CpuTests, ADC_Can_Add_16_Bit_Number_With_Carry)
             0x69, 0x50,
             0x85, 0x11
     };
-
-    constexpr uint16_t offset = 0x1000;
-    for (int i = 0; i < 12; i++)
-    {
-        memory.data[offset + i] = program[i];
-    }
-
+    memory.WriteProgram(program);
     cpu.Reset();
 
     uint8_t cycles = 0;
