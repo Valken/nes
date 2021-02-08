@@ -84,3 +84,31 @@ TEST_F(CpuTests, ADC_Can_Add_16_Bit_Number_With_Carry)
 
     ASSERT_EQ(answer, 41248);
 }
+
+TEST_F(CpuTests, SBC_Subtracts_Number)
+{
+//    * = $1000
+//    1000        SEC             38
+//    1001        LDA #$0A        A9 0A
+//    1003        SBC #$05        E9 05
+//    1005        STA *$14        85 14
+
+    uint8_t program[] = {
+            0x38,
+            0xA9, 0x0A,
+            0xE9, 0x05,
+            0x85, 0x14
+    };
+
+    memory.WriteProgram(program);
+    cpu.Reset();
+
+    uint8_t cycles = 0;
+    for (int i = 0; i < 4; i++)
+    {
+        cycles += cpu.Step();
+    }
+
+    auto result = memory.Read(0x14);
+    EXPECT_EQ(result, 5);
+}

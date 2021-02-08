@@ -203,7 +203,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x15 */ {},
     /* 0x16 */ {},
     /* 0x17 */ {},
-    /* 0x18 */ {},
+    /* 0x18 */ { &CPU::CLC, AddressMode::Immediate, 1, 2, 0 },
     /* 0x19 */ {},
     /* 0x1A */ {},
     /* 0x1B */ {},
@@ -237,7 +237,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x35 */ {},
     /* 0x36 */ {},
     /* 0x37 */ {},
-    /* 0x38 */ {},
+    /* 0x38 */ { &CPU::SEC, AddressMode::Implicit, 1, 2, 0 },
     /* 0x39 */ {},
     /* 0x3A */ {},
     /* 0x3B */ {},
@@ -425,7 +425,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xE6 */ {},
     /* 0xE7 */ {},
     /* 0xE8 */ {},
-    /* 0xE9 */ {},
+    /* 0xE9 */ { &CPU::SBC, AddressMode::Immediate, 2, 2, 0 },
     /* 0xEA */ { &CPU::NOP, AddressMode::Implicit, 1, 2, 0 },
     /* 0xEB */ {},
     /* 0xEC */ {},
@@ -589,8 +589,14 @@ void CPU::ADC(Operand const& operand)
     a = result;
 }
 
-void CPU::SBC(Operand const&)
+void CPU::SBC(Operand const& operand)
 {
+    uint16_t const m = a;
+    uint16_t const n = memoryBus->Read(operand.address);
+    uint16_t const c = (s & C) ? 1 : 0;
+    uint16_t result = m - n - (1 - c);
+
+    a = static_cast<uint8_t>(result);
 }
 
 void CPU::CMP(Operand const&)
@@ -702,6 +708,12 @@ void CPU::BVS(Operand const&)
 
 void CPU::CLC(Operand const&)
 {
+    s &= ~C;
+}
+
+void CPU::SEC(Operand const&)
+{
+    s |= C;
 }
 
 void CPU::CLD(Operand const&)
@@ -714,10 +726,6 @@ void CPU::CLI(Operand const&)
 }
 
 void CPU::CLV(Operand const&)
-{
-}
-
-void CPU::SEC(Operand const&)
 {
 }
 
