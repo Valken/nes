@@ -15,10 +15,18 @@ enum CpuFlags
     N = (1 << 7), // Negative
 };
 
+static uint8_t SetFlag(uint8_t flags, uint8_t value, bool enabled)
+{
+    if (enabled)
+        return flags |= value;
+    else
+        return flags &= ~value;
+}
+
 static uint8_t SetZN(uint8_t flags, uint8_t value)
 {
-    if (value == 0) flags |= Z;
-    if (value & 0x80) flags |= N;
+    flags = SetFlag(flags, Z, value == 0);
+    flags = SetFlag(flags, N, value & 0x80);
     return  flags;
 }
 
@@ -417,11 +425,11 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xDF */ {},
 
     /* 0xE0 */ {},
-    /* 0xE1 */ {},
+    /* 0xE1 */ { &CPU::SBC, AddressMode::IndexedIndirect, 2, 6, 0 },
     /* 0xE2 */ {},
     /* 0xE3 */ {},
     /* 0xE4 */ {},
-    /* 0xE5 */ {},
+    /* 0xE5 */ { &CPU::SBC, AddressMode::ZeroPage, 2, 3, 0 },
     /* 0xE6 */ {},
     /* 0xE7 */ {},
     /* 0xE8 */ {},
@@ -429,24 +437,24 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xEA */ { &CPU::NOP, AddressMode::Implicit, 1, 2, 0 },
     /* 0xEB */ {},
     /* 0xEC */ {},
-    /* 0xED */ {},
+    /* 0xED */ { &CPU::SBC, AddressMode::Absolute, 3, 4 , 0 },
     /* 0xEE */ {},
     /* 0xEF */ {},
 
     /* 0xF0 */ {},
-    /* 0xF1 */ {},
+    /* 0xF1 */ { &CPU::SBC, AddressMode::IndirectIndexed, 2, 5, 1 },
     /* 0xF2 */ {},
     /* 0xF3 */ {},
     /* 0xF4 */ {},
-    /* 0xF5 */ {},
+    /* 0xF5 */ { &CPU::SBC, AddressMode::ZeroPageX, 2, 4, 0 },
     /* 0xF6 */ {},
     /* 0xF7 */ {},
     /* 0xF8 */ {},
-    /* 0xF9 */ {},
+    /* 0xF9 */ { &CPU::SBC, AddressMode::AbsoluteY, 3, 4, 1 },
     /* 0xFA */ {},
     /* 0xFB */ {},
     /* 0xFC */ {},
-    /* 0xFD */ {},
+    /* 0xFD */ { &CPU::SBC, AddressMode::AbsoluteX, 3, 4, 1 },
     /* 0xFE */ {},
     /* 0xFF */ {}
 };
@@ -578,12 +586,12 @@ void CPU::ADC(Operand const& operand)
     uint16_t const result = m + n + c;
 
     s = SetZN(s, static_cast<uint8_t>(result));
-    if (result > 0xFF) s |= C;
+    s = SetFlag(s, C, result > 0xFF);
 
     // Signed overflow?
     // If the signs of m and n are the same
     // And the sign of a and result are different
-    if ((~(n ^ m) & (a ^ result)) & 0x0080) s |= V;
+    s = SetFlag(s, V, (~(n ^ m) & (a ^ result)) & 0x0080);
 
     a = static_cast<uint8_t>(result);
 }
@@ -596,11 +604,8 @@ void CPU::SBC(Operand const& operand)
     uint16_t const result = m + ~n +  c;
 
     s = SetZN(s, static_cast<uint8_t>(result));
-    if (result < 0xFF)
-        s |= C;
-    else
-        s &= ~C;
-    if ((~(n ^ ~m) & (a ^ result)) & 0x0080) s |= V;
+    s = SetFlag(s, C, result < 0xFF);
+    s = SetFlag(s, V, (~(n ^ ~m) & (a ^ result)) & 0x0080);
 
     a = static_cast<uint8_t>(result);
 }

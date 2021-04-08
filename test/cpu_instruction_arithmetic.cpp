@@ -115,7 +115,7 @@ TEST_F(CpuTests, SBC_Subtracts_Number)
     ASSERT_FALSE(cpu.s & (1 << 6)); // Should be no signed overflow
 }
 
-TEST_F(CpuTests, Signed_Overflow_Sets_Overflow_Bit)
+TEST_F(CpuTests, SBC_Signed_Overflow_Sets_Overflow_Bit)
 {
 
 //    * = $1000
@@ -143,7 +143,45 @@ TEST_F(CpuTests, Signed_Overflow_Sets_Overflow_Bit)
     auto result = memory.Read(0x14);
     EXPECT_EQ(result, static_cast<uint8_t>(-96));
     ASSERT_FALSE(cpu.s & (1 << 0)); // Borrow
+    ASSERT_TRUE(cpu.s & (1 << 7)); // Negative
     ASSERT_TRUE(cpu.s & (1 << 6)); // Signed overflow
+}
+
+TEST_F(CpuTests, SBC_Can_Subtract_16_Bit_Number_With_Borrow)
+{
+//    * = $1000
+//    1000        SEC             38
+//    1001        LDA #$50        A9 50
+//    1003        SBC #$F0        E9 F0
+//    1005        STA *$14        85 14
+//    1007        LDA #$50        A9 50
+//    1009        SBC #$F0        E9 F0
+//    100B        STA *$15        85 15
+
+    uint8_t program[] = {
+            0x38,
+            0xA9, 0x50,
+            0xE9, 0xF0,
+            0x85, 0x10,
+            0xA9, 0x50,
+            0xE9, 0xF0,
+            0x85, 0x11,
+    };
+
+    memory.WriteProgram(program);
+    cpu.Reset();
+
+    uint8_t cycles = 0;
+    for (int i = 0; i < 7; i++)
+    {
+        cycles += cpu.Step();
+    }
+
+    auto low = memory.Read(0x10); // Should be 20
+    auto high = memory.Read(0x11); // Should be A0 + 1
+    uint16_t answer = high << 8 | low;
+
+    ASSERT_EQ(answer, 24416);
 }
 
 // Borrow
