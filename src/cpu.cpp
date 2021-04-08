@@ -390,7 +390,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xBE */ {},
     /* 0xBF */ {},
 
-    /* 0xC0 */ {},
+    /* 0xC0 */ { &CPU::CPY, AddressMode::Immediate, 2, 2, 0 },
     /* 0xC1 */ {},
     /* 0xC2 */ {},
     /* 0xC3 */ {},
@@ -424,7 +424,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xDE */ {},
     /* 0xDF */ {},
 
-    /* 0xE0 */ {},
+    /* 0xE0 */ { &CPU::CPX, AddressMode::Immediate, 2, 2, 0 },
     /* 0xE1 */ { &CPU::SBC, AddressMode::IndexedIndirect, 2, 6, 0 },
     /* 0xE2 */ {},
     /* 0xE3 */ {},
@@ -612,20 +612,29 @@ void CPU::SBC(Operand const& operand)
     a = static_cast<uint8_t>(result);
 }
 
+static uint8_t Compare(uint8_t a, uint8_t b, uint8_t status)
+{
+    status = SetZN(status, a - b);
+    status = SetFlag(status, C, a >= b);
+    return status;
+}
+
 void CPU::CMP(Operand const& operand)
 {
     auto const m = memoryBus->Read(operand.address);
-    auto result = a - m;
-    s = SetZN(s, result);
-    s = SetFlag(s, C, a >= m);
+    s = Compare(a, m, s);
 }
 
-void CPU::CPX(Operand const&)
+void CPU::CPX(Operand const& operand)
 {
+    auto const m = memoryBus->Read(operand.address);
+    s = Compare(x, m, s);
 }
 
-void CPU::CPY(Operand const&)
+void CPU::CPY(Operand const& operand)
 {
+    auto const m = memoryBus->Read(operand.address);
+    s = Compare(y, m, s);
 }
 
 // Increments & Decrements
