@@ -575,18 +575,17 @@ void CPU::ADC(Operand const& operand)
     uint16_t const m = a;
     uint16_t const n = memoryBus->Read(operand.address);
     uint16_t const c = (s & C) ? 1 : 0;
-    uint16_t result = m + n + c;
+    uint16_t const result = m + n + c;
 
-    s = SetZN(s, a);
+    s = SetZN(s, static_cast<uint8_t>(result));
     if (result > 0xFF) s |= C;
 
     // Signed overflow?
-    bool const signsSame = ~(n ^ m) & 0x80;
-    bool const resultSignsDifferent = (a ^ result) & 0x80;
+    // If the signs of m and n are the same
+    // And the sign of a and result are different
+    if ((~(n ^ m) & (a ^ result)) & 0x0080) s |= V;
 
-    if (signsSame && resultSignsDifferent) s |= V;
-
-    a = result;
+    a = static_cast<uint8_t>(result);
 }
 
 void CPU::SBC(Operand const& operand)
@@ -594,7 +593,14 @@ void CPU::SBC(Operand const& operand)
     uint16_t const m = a;
     uint16_t const n = memoryBus->Read(operand.address);
     uint16_t const c = (s & C) ? 1 : 0;
-    uint16_t result = m - n - (1 - c);
+    uint16_t const result = m + ~n +  c;
+
+    s = SetZN(s, static_cast<uint8_t>(result));
+    if (result < 0xFF)
+        s |= C;
+    else
+        s &= ~C;
+    if ((~(n ^ ~m) & (a ^ result)) & 0x0080) s |= V;
 
     a = static_cast<uint8_t>(result);
 }

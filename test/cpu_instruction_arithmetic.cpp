@@ -111,4 +111,41 @@ TEST_F(CpuTests, SBC_Subtracts_Number)
 
     auto result = memory.Read(0x14);
     EXPECT_EQ(result, 5);
+    EXPECT_TRUE(cpu.s & (1 << 0));
+    ASSERT_FALSE(cpu.s & (1 << 6)); // Should be no signed overflow
 }
+
+TEST_F(CpuTests, Signed_Overflow_Sets_Overflow_Bit)
+{
+
+//    * = $1000
+//    1000        SEC             38
+//    1001        LDA #$50        A9 50
+//    1003        SBC #$B0        E9 B0
+//    1005        STA *$14        85 14
+
+    uint8_t program[] = {
+            0x38,
+            0xA9, 0x50,
+            0xE9, 0xB0,
+            0x85, 0x14,
+    };
+
+    memory.WriteProgram(program);
+    cpu.Reset();
+
+    uint8_t cycles = 0;
+    for (int i = 0; i < 4; i++)
+    {
+        cycles += cpu.Step();
+    }
+
+    auto result = memory.Read(0x14);
+    EXPECT_EQ(result, static_cast<uint8_t>(-96));
+    ASSERT_FALSE(cpu.s & (1 << 0)); // Borrow
+    ASSERT_TRUE(cpu.s & (1 << 6)); // Signed overflow
+}
+
+// Borrow
+// Overflow
+// 16 bit number subtract
