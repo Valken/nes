@@ -399,7 +399,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xC6 */ {},
     /* 0xC7 */ {},
     /* 0xC8 */ {},
-    /* 0xC9 */ {},
+    /* 0xC9 */ { &CPU::CMP, AddressMode::Immediate, 2, 2, 0 },
     /* 0xCA */ {},
     /* 0xCB */ {},
     /* 0xCC */ {},
@@ -596,6 +596,8 @@ void CPU::ADC(Operand const& operand)
     a = static_cast<uint8_t>(result);
 }
 
+// https://stackoverflow.com/questions/48971814/i-dont-understand-whats-going-on-with-sbc#
+// https://www.c64-wiki.com/wiki/SBC
 void CPU::SBC(Operand const& operand)
 {
     uint16_t const m = a;
@@ -610,8 +612,12 @@ void CPU::SBC(Operand const& operand)
     a = static_cast<uint8_t>(result);
 }
 
-void CPU::CMP(Operand const&)
+void CPU::CMP(Operand const& operand)
 {
+    auto const m = memoryBus->Read(operand.address);
+    auto result = a - m;
+    s = SetZN(s, result);
+    s = SetFlag(s, C, a >= m);
 }
 
 void CPU::CPX(Operand const&)

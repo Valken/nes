@@ -184,6 +184,65 @@ TEST_F(CpuTests, SBC_Can_Subtract_16_Bit_Number_With_Borrow)
     ASSERT_EQ(answer, 24416);
 }
 
-// Borrow
-// Overflow
-// 16 bit number subtract
+TEST_F(CpuTests, CMP_SameValue_Sets_Z_And_C)
+{
+    uint8_t program[] = {
+        0xA9, 0x50,
+        0xC9, 0x50
+    };
+
+    memory.WriteProgram(program);
+    cpu.Reset();
+
+    uint8_t cycles = 0;
+    for (int i = 0; i < 2; i++)
+    {
+        cycles += cpu.Step();
+    }
+
+    ASSERT_TRUE(cpu.s & 1 << 0);
+    ASSERT_TRUE(cpu.s & 1 << 1);
+    ASSERT_FALSE(cpu.s & 1 << 7);
+}
+
+TEST_F(CpuTests, CMP_GreaterValue_Sets_C)
+{
+    uint8_t program[] = {
+            0xA9, 0x60,
+            0xC9, 0x50
+    };
+
+    memory.WriteProgram(program);
+    cpu.Reset();
+
+    uint8_t cycles = 0;
+    for (int i = 0; i < 2; i++)
+    {
+        cycles += cpu.Step();
+    }
+
+    ASSERT_TRUE(cpu.s & 1 << 0);
+    ASSERT_FALSE(cpu.s & 1 << 1);
+    ASSERT_FALSE(cpu.s & 1 << 7);
+}
+
+TEST_F(CpuTests, CMP_LessValue_Sets_N)
+{
+    uint8_t program[] = {
+            0xA9, 0x40,
+            0xC9, 0x50
+    };
+
+    memory.WriteProgram(program);
+    cpu.Reset();
+
+    uint8_t cycles = 0;
+    for (int i = 0; i < 2; i++)
+    {
+        cycles += cpu.Step();
+    }
+
+    ASSERT_FALSE(cpu.s & 1 << 0);
+    ASSERT_FALSE(cpu.s & 1 << 1);
+    ASSERT_TRUE(cpu.s & 1 << 7);
+}
