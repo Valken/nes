@@ -330,7 +330,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x85 */ { &CPU::STA, AddressMode::ZeroPage, 2, 3, 0 },
     /* 0x86 */ { &CPU::STX, AddressMode::ZeroPage, 2, 3, 0 },
     /* 0x87 */ {},
-    /* 0x88 */ {},
+    /* 0x88 */ { &CPU::DEY, AddressMode::Implicit, 1, 2, 0 },
     /* 0x89 */ {},
     /* 0x8A */ { &CPU::TXA, AddressMode::Implicit, 1, 2, 0 },
     /* 0x8B */ {},
@@ -396,15 +396,15 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xC3 */ {},
     /* 0xC4 */ {},
     /* 0xC5 */ {},
-    /* 0xC6 */ {},
+    /* 0xC6 */ { &CPU::DEC, AddressMode::ZeroPage, 2, 5, 0 },
     /* 0xC7 */ {},
-    /* 0xC8 */ {},
+    /* 0xC8 */ { &CPU::INY, AddressMode::Implicit, 1, 2, 0 },
     /* 0xC9 */ { &CPU::CMP, AddressMode::Immediate, 2, 2, 0 },
-    /* 0xCA */ {},
+    /* 0xCA */ { &CPU::DEX, AddressMode::Implicit, 1, 2, 0 },
     /* 0xCB */ {},
     /* 0xCC */ {},
     /* 0xCD */ {},
-    /* 0xCE */ {},
+    /* 0xCE */ { &CPU::DEC, AddressMode::Absolute, 3, 6, 0 },
     /* 0xCF */ {},
 
     /* 0xD0 */ {},
@@ -413,7 +413,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xD3 */ {},
     /* 0xD4 */ {},
     /* 0xD5 */ {},
-    /* 0xD6 */ {},
+    /* 0xD6 */ { &CPU::DEC, AddressMode::ZeroPageX, 2, 6, 0 },
     /* 0xD7 */ {},
     /* 0xD8 */ {},
     /* 0xD9 */ {},
@@ -421,7 +421,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xDB */ {},
     /* 0xDC */ {},
     /* 0xDD */ {},
-    /* 0xDE */ {},
+    /* 0xDE */ { &CPU::DEC, AddressMode::AbsoluteX, 3, 7, 0 },
     /* 0xDF */ {},
 
     /* 0xE0 */ { &CPU::CPX, AddressMode::Immediate, 2, 2, 0 },
@@ -430,15 +430,15 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xE3 */ {},
     /* 0xE4 */ {},
     /* 0xE5 */ { &CPU::SBC, AddressMode::ZeroPage, 2, 3, 0 },
-    /* 0xE6 */ {},
+    /* 0xE6 */ { &CPU::INC, AddressMode::ZeroPage, 2, 5, 0 },
     /* 0xE7 */ {},
-    /* 0xE8 */ {},
+    /* 0xE8 */ { &CPU::INX, AddressMode::Implicit, 1, 2, 0 },
     /* 0xE9 */ { &CPU::SBC, AddressMode::Immediate, 2, 2, 0 },
     /* 0xEA */ { &CPU::NOP, AddressMode::Implicit, 1, 2, 0 },
     /* 0xEB */ {},
     /* 0xEC */ {},
     /* 0xED */ { &CPU::SBC, AddressMode::Absolute, 3, 4 , 0 },
-    /* 0xEE */ {},
+    /* 0xEE */ { &CPU::INC, AddressMode::Absolute, 3, 6, 0 },
     /* 0xEF */ {},
 
     /* 0xF0 */ {},
@@ -447,7 +447,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xF3 */ {},
     /* 0xF4 */ {},
     /* 0xF5 */ { &CPU::SBC, AddressMode::ZeroPageX, 2, 4, 0 },
-    /* 0xF6 */ {},
+    /* 0xF6 */ { &CPU::INC, AddressMode::ZeroPageX, 2, 6, 0 },
     /* 0xF7 */ {},
     /* 0xF8 */ {},
     /* 0xF9 */ { &CPU::SBC, AddressMode::AbsoluteY, 3, 4, 1 },
@@ -455,7 +455,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0xFB */ {},
     /* 0xFC */ {},
     /* 0xFD */ { &CPU::SBC, AddressMode::AbsoluteX, 3, 4, 1 },
-    /* 0xFE */ {},
+    /* 0xFE */ { &CPU::INC, AddressMode::AbsoluteX, 3, 7, 0 },
     /* 0xFF */ {}
 };
 
@@ -639,28 +639,44 @@ void CPU::CPY(Operand const& operand)
 
 // Increments & Decrements
 
-void CPU::INC(Operand const&)
+void CPU::INC(Operand const& operand)
 {
+    auto value = memoryBus->Read(operand.address);
+    value++;
+    memoryBus->Write(operand.address, value);
+    s = SetZN(s, value);
 }
 
 void CPU::INX(Operand const&)
 {
+    x++;
+    s = SetZN(s, x);
 }
 
 void CPU::INY(Operand const&)
 {
+    y++;
+    s = SetZN(s, y);
 }
 
-void CPU::DEC(Operand const&)
+void CPU::DEC(Operand const& operand)
 {
+    auto value = memoryBus->Read(operand.address);
+    value--;
+    memoryBus->Write(operand.address, value);
+    s = SetZN(s, value);
 }
 
 void CPU::DEX(Operand const&)
 {
+    x--;
+    s = SetZN(s, x);
 }
 
 void CPU::DEY(Operand const&)
 {
+    y--;
+    s = SetZN(s, y);
 }
 
 // Shifts

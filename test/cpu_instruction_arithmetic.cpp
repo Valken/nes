@@ -246,3 +246,143 @@ TEST_F(CpuTests, CMP_LessValue_Sets_N)
     ASSERT_FALSE(cpu.s & 1 << 1);
     ASSERT_TRUE(cpu.s & 1 << 7);
 }
+
+TEST_F(CpuTests, INC_IncrementsMemoryAtAddress)
+{
+//    * = $1000
+//    1000        LDA #$40        A9 40
+//    1002        STA *$14        85 14
+//    1004        INC *$14        E6 14
+
+    uint8_t program[] = {
+            0xA9, 0x40,
+            0x85, 0x14,
+            0xE6, 0x14,
+    };
+
+    memory.WriteProgram(program);
+    cpu.Reset();
+
+    uint8_t cycles = 0;
+    for (int i = 0; i < 3; i++)
+    {
+        cycles += cpu.Step();
+    }
+
+    ASSERT_EQ(memory.Read(0x14), 0x41);
+}
+
+TEST_F(CpuTests, INC_ZeroFlagGetsSet)
+{
+    uint8_t program[] = {
+            0xA9, 0xFF, // FF so should wrap around
+            0x85, 0x14,
+            0xE6, 0x14,
+    };
+
+    memory.WriteProgram(program);
+    cpu.Reset();
+
+    uint8_t cycles = 0;
+    for (int i = 0; i < 3; i++)
+    {
+        cycles += cpu.Step();
+    }
+
+    ASSERT_TRUE(cpu.s & 1 << 1);
+    ASSERT_FALSE(cpu.s & 1 << 7);
+}
+
+
+TEST_F(CpuTests, INC_NegativeFlagGetsSet)
+{
+    uint8_t program[] = {
+            0xA9, 0x7F, // Will increment into negative range of signed 8 bit integer
+            0x85, 0x14,
+            0xE6, 0x14,
+    };
+
+    memory.WriteProgram(program);
+    cpu.Reset();
+
+    uint8_t cycles = 0;
+    for (int i = 0; i < 3; i++)
+    {
+        cycles += cpu.Step();
+    }
+
+    ASSERT_FALSE(cpu.s & 1 << 1);
+    ASSERT_TRUE(cpu.s & 1 << 7);
+}
+
+TEST_F(CpuTests, INX_IncrementsXRegister)
+{
+//    * = $1000
+//    1000        LDX #$7F        A2 7F
+//    1002        INX             E8
+    uint8_t program[] = {
+            0xA2, 0x7F,
+            0xE8
+    };
+
+    memory.WriteProgram(program);
+    cpu.Reset();
+
+    uint8_t cycles = 0;
+    for (int i = 0; i < 2; i++)
+    {
+        cycles += cpu.Step();
+    }
+
+    ASSERT_EQ(cpu.x, static_cast<uint8_t >(-128));
+    ASSERT_TRUE(cpu.s & 1 << 7);
+}
+
+TEST_F(CpuTests, INY_IncrementsYRegister)
+{
+//    * = $1000
+//    1000        LDY #$FF        A0 FF
+//    1002        INY             C8
+
+    uint8_t program[] = {
+            0xA0, 0xFF,
+            0xC8
+    };
+
+    memory.WriteProgram(program);
+    cpu.Reset();
+
+    uint8_t cycles = 0;
+    for (int i = 0; i < 2; i++)
+    {
+        cycles += cpu.Step();
+    }
+
+    ASSERT_EQ(cpu.x, 0);
+    ASSERT_TRUE(cpu.s & 1 << 1);
+}
+
+TEST_F(CpuTests, DEC_DecrementsMemoryAtAddress)
+{
+//    * = $1000
+//    1000        LDA #$40        A9 40
+//    1002        STA *$14        85 14
+//    1004        DEC *$14        C6 14
+
+    uint8_t program[] = {
+            0xA9, 0x40,
+            0x85, 0x14,
+            0xC6, 0x14,
+    };
+
+    memory.WriteProgram(program);
+    cpu.Reset();
+
+    uint8_t cycles = 0;
+    for (int i = 0; i < 3; i++)
+    {
+        cycles += cpu.Step();
+    }
+
+    ASSERT_EQ(memory.Read(0x14), 0x3F);
+}
