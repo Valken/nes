@@ -192,15 +192,15 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x03 */ {},
     /* 0x04 */ {},
     /* 0x05 */ {},
-    /* 0x06 */ {},
+    /* 0x06 */ { &CPU::ASL, AddressMode::ZeroPage, 2, 5, 0 },
     /* 0x07 */ {},
     /* 0x08 */ { &CPU::PHP, AddressMode::Implicit, 1, 3, 0 },
     /* 0x09 */ {},
-    /* 0x0A */ {},
+    /* 0x0A */ { &CPU::ASL, AddressMode::Accumulator, 1, 2, 0 },
     /* 0x0B */ {},
     /* 0x0C */ {},
     /* 0x0D */ {},
-    /* 0x0E */ {},
+    /* 0x0E */ { &CPU::ASL, AddressMode::Absolute, 3, 6, 0 },
     /* 0x0F */ {},
 
     /* 0x10 */ {},
@@ -209,7 +209,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x13 */ {},
     /* 0x14 */ {},
     /* 0x15 */ {},
-    /* 0x16 */ {},
+    /* 0x16 */ { &CPU::ASL, AddressMode::ZeroPageX, 2, 6, 0 },
     /* 0x17 */ {},
     /* 0x18 */ { &CPU::CLC, AddressMode::Immediate, 1, 2, 0 },
     /* 0x19 */ {},
@@ -217,7 +217,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x1B */ {},
     /* 0x1C */ {},
     /* 0x1D */ {},
-    /* 0x1E */ {},
+    /* 0x1E */ { &CPU::ASL, AddressMode::AbsoluteX, 3, 7, 0 },
     /* 0x1F */ {},
 
     /* 0x20 */ {},
@@ -681,8 +681,22 @@ void CPU::DEY(Operand const&)
 
 // Shifts
 
-void CPU::ASL(Operand const&)
+void CPU::ASL(Operand const& operand)
 {
+    if (operand.addressMode == AddressMode::Accumulator)
+    {
+        s = SetFlag(s, C, a & 0x80);
+        a <<= 1;
+        s = SetZN(s, a);
+    }
+    else
+    {
+        auto value = memoryBus->Read(operand.address);
+        s = SetFlag(s, C, value & 0x80);
+        value <<= 1;
+        s = SetZN(s, value);
+        memoryBus->Write(operand.address, value);
+    }
 }
 
 void CPU::LSR(Operand const&)
