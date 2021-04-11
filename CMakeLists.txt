@@ -24,7 +24,7 @@ add_executable(CPU_Test
 		test/cpu_tests.cpp
 		src/cpu.h
 		src/cpu.cpp
-		src/memory.h test/cputests.h test/cpu_instruction_load_store.cpp test/cpu_instruction_jump_call.cpp test/cpu_instruction_system.cpp test/cpu_instruction_register_transfers.cpp test/cpu_instruction_arithmetic.cpp)
+		src/memory.h test/cputests.h test/cpu_instruction_load_store.cpp test/cpu_instruction_jump_call.cpp test/cpu_instruction_system.cpp test/cpu_instruction_register_transfers.cpp test/cpu_instruction_arithmetic.cpp test/cpu_instruction_shifts.cpp)
 
 target_compile_options(CPU_Test PRIVATE
 		$<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>

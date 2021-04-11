@@ -226,15 +226,15 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x23 */ {},
     /* 0x24 */ {},
     /* 0x25 */ {},
-    /* 0x26 */ {},
+    /* 0x26 */ { &CPU::ROL, AddressMode::ZeroPage, 2, 5, 0 },
     /* 0x27 */ {},
     /* 0x28 */ { &CPU::PLP, AddressMode::Implicit, 1, 4, 0 },
     /* 0x29 */ {},
-    /* 0x2A */ {},
+    /* 0x2A */ { &CPU::ROL, AddressMode::Accumulator, 1, 2, 0 },
     /* 0x2B */ {},
     /* 0x2C */ {},
     /* 0x2D */ {},
-    /* 0x2E */ {},
+    /* 0x2E */ { &CPU::ROL, AddressMode::Absolute, 2, 6, 0 },
     /* 0x2F */ {},
 
     /* 0x30 */ {},
@@ -243,7 +243,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x33 */ {},
     /* 0x34 */ {},
     /* 0x35 */ {},
-    /* 0x36 */ {},
+    /* 0x36 */ { &CPU::ROL, AddressMode::ZeroPageX, 2, 6, 0 },
     /* 0x37 */ {},
     /* 0x38 */ { &CPU::SEC, AddressMode::Implicit, 1, 2, 0 },
     /* 0x39 */ {},
@@ -251,7 +251,7 @@ InstructionInfo CPU::InstructionInfo[256] =
     /* 0x3B */ {},
     /* 0x3C */ {},
     /* 0x3D */ {},
-    /* 0x3E */ {},
+    /* 0x3E */ { &CPU::ROL, AddressMode::AbsoluteX, 2, 7, 0 },
     /* 0x3F */ {},
 
     /* 0x40 */ {},
@@ -703,8 +703,25 @@ void CPU::LSR(Operand const&)
 {
 }
 
-void CPU::ROL(Operand const&)
+void CPU::ROL(Operand const& operand)
 {
+    uint8_t currentCarry = s & 0x01;
+    if (operand.addressMode == AddressMode::Accumulator)
+    {
+        s = SetFlag(s, C, a & 0x80);
+        a <<= 1;
+        a |= currentCarry;
+        s = SetZN(s, a);
+    }
+    else
+    {
+        auto value = memoryBus->Read(operand.address);
+        s = SetFlag(s, C, value & 0x80);
+        value <<= 1;
+        value |= currentCarry;
+        s = SetZN(s, value);
+        memoryBus->Write(operand.address, value);
+    }
 }
 
 void CPU::ROR(Operand const&)
