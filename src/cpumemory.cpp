@@ -15,17 +15,19 @@ uint8_t CPUMemory::Read(uint16_t address)
     }
     else if (address < 0x4000)
     {
-        auto ppuRegister = address % 8;
+        //auto ppuRegister = address % 8;
         return 0x00;
     }
     else if (address < 0x6000)
     {
-        // Lots of more memory mapping to do here
+        // Lots of more data mapping to do here
     }
     else if (address >= 0x6000)
     {
         // Mapper
     }
+
+    return 0x00;
 }
 
 void CPUMemory::Write(uint16_t address, uint8_t value)
@@ -40,7 +42,7 @@ void CPUMemory::Write(uint16_t address, uint8_t value)
     }
     else if (address < 0x6000)
     {
-        // Lots of more memory mapping to do here
+        // Lots of more data mapping to do here
     }
     else if (address >= 0x6000)
     {

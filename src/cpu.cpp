@@ -538,15 +538,18 @@ void CPU::PHA(Operand const&)
     Push(a);
 }
 
-void CPU::PHP(Operand const&)
-{
-    Push(s);
-}
-
 void CPU::PLA(Operand const&)
 {
     a = Pop();
     s = SetZN(s, a);
+}
+
+// Some consideration needed with flags when pushed to and popped from stack
+// https://wiki.nesdev.com/w/index.php/Status_flags#The_B_flag
+// I think I'll see how things go with this one when I run actual test ROMs
+void CPU::PHP(Operand const&)
+{
+    Push(s);
 }
 
 void CPU::PLP(Operand const&)
@@ -556,16 +559,24 @@ void CPU::PLP(Operand const&)
 
 // Logical
 
-void CPU::AND(Operand const&)
+void CPU::AND(Operand const& operand)
 {
+    uint8_t value = memoryBus->Read(operand.address);
+    a = a & value;
+    s = SetZN(s, a);
 }
 
-void CPU::EOR(Operand const&)
+void CPU::EOR(Operand const& operand)
 {
+    uint8_t value = memoryBus->Read(operand.address);
+    a = a ^ value;
+    s = SetZN(s, a);
 }
 
-void CPU::ORA(Operand const&)
+void CPU::ORA(Operand const& operand)
 {
+    uint8_t value = memoryBus->Read(operand.address);;
+    a = a | value;
 }
 
 void CPU::BIT(Operand const&)

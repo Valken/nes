@@ -25,6 +25,11 @@ constexpr size_t ChrRomBankSize = 8 * 1024;
 
 int main(int argc, char *argv[])
 {
+//    uint8_t low = 0xFF;
+//    uint8_t high = 0x01;
+    
+    //uint16_t word = high << 8 | low; // Widening happens here.
+    
     std::vector<uint8_t> ram(0x2000);
     ram.reserve(0x2000);
     std::fill(ram.begin(), ram.end(), 0xEA );
@@ -70,3 +75,4 @@ int main(int argc, char *argv[])
 //    auto [one, two, three] = std::make_tuple(1, "two", 3.0f);
     return 0;
 }
+
